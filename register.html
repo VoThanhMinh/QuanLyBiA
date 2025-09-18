@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - BI-A OXU</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0d47a1;
+            --secondary-color: #1976d2;
+            --text-color: #333;
+            --background-color: #eef2f6;
+            --card-background: #ffffff;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --danger-color: #f44336;
+            --success-color: #4caf50;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .register-container {
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .register-container h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .logo {
+            color: var(--primary-color);
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-register:hover {
+            background-color: var(--secondary-color);
+        }
+        .message {
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        .message.error {
+            color: var(--danger-color);
+        }
+        .message.success {
+            color: var(--success-color);
+        }
+        .login-link {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <i class="fa-solid fa-gem logo"></i>
+        <h2>Đăng ký tài khoản</h2>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="username">Tên đăng nhập</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password" required>
+            </div>
+             <div class="form-group">
+                <label for="confirm-password">Xác nhận mật khẩu</label>
+                <input type="password" id="confirm-password" required>
+            </div>
+            <button type="submit" class="btn-register">Đăng ký</button>
+            <div id="message-box" class="message"></div>
+        </form>
+        <div class="login-link">
+            Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('register-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const messageBox = document.getElementById('message-box');
+
+            // --- VALIDATION ---
+            messageBox.style.display = 'block';
+            if (!username || !password) {
+                messageBox.className = 'message error';
+                messageBox.textContent = 'Vui lòng điền đầy đủ thông tin.';
+                return;
+            }
+            if (password !== confirmPassword) {
+                messageBox.className = 'message error';
+                messageBox.textContent = 'Mật khẩu xác nhận không khớp.';
+                return;
+            }
+
+            const ACCOUNTS_STORAGE_KEY = 'biaOxuAccounts';
+            let accounts = JSON.parse(localStorage.getItem(ACCOUNTS_STORAGE_KEY)) || [];
+
+            // Kiểm tra username đã tồn tại chưa
+            if (accounts.some(acc => acc.username === username)) {
+                messageBox.className = 'message error';
+                messageBox.textContent = 'Tên đăng nhập này đã tồn tại.';
+                return;
+            }
+            
+            // --- LOGIC GÁN QUYỀN ---
+            // Người dùng đầu tiên sẽ là admin, những người sau là user.
+            const role = accounts.length === 0 ? 'admin' : 'user';
+
+            // --- LƯU TÀI KHOẢN ---
+            // Băm mật khẩu (trong thực tế, không bao giờ lưu mật khẩu dạng thô)
+            // Đây là một hàm băm đơn giản để minh họa, không an toàn cho sản phẩm thực tế.
+            const hashedPassword = btoa(password); 
+
+            const newAccount = {
+                username: username,
+                password: hashedPassword,
+                role: role
+            };
+
+            accounts.push(newAccount);
+            localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
+
+            messageBox.className = 'message success';
+            messageBox.textContent = `Đăng ký thành công! Tài khoản của bạn có vai trò là '${role}'. Bạn sẽ được chuyển đến trang đăng nhập sau 3 giây.`;
+
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

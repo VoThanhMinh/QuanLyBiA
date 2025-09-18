@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ Quỹ Tiền Mặt - PHẦN MỀM QUẢN LÝ QUÁN BI-A</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+    }
+    </script>
+    <style>
+        :root {
+            --primary-color: #0d47a1; --secondary-color: #1976d2; --text-color: #333;
+            --light-text-color: #f0f4f8; --background-color: #eef2f6; --card-background: #ffffff;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); --shadow-dark: 0 2px 10px rgba(0, 0, 0, 0.15);
+            --border-color: #e0e0e0; --income-color: #4caf50; --expense-color: #f44336;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; }
+        .app-container { display: flex; flex-direction: column; min-height: 100vh; }
+        .content-wrapper { display: flex; flex: 1; padding: 20px; gap: 20px; }
+        .main-header { background-color: var(--card-background); box-shadow: var(--shadow-light); height: 70px; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+        .main-header .app-name { font-size: 24px; font-weight: 600; color: var(--primary-color); margin: 0; display: flex; align-items: center; gap: 10px; }
+        .main-header .app-name i { color: var(--secondary-color); }
+        .main-nav ul { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; flex-wrap: wrap; }
+        .main-nav li { position: relative; margin: 0 5px; }
+        .main-nav a { text-decoration: none; color: var(--text-color); padding: 12px 18px; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; border-radius: 8px; transition: all 0.3s ease; }
+        .main-nav a i { font-size: 18px; color: var(--secondary-color); }
+        .main-nav a:hover, .main-nav li.active a { background-color: var(--background-color); color: var(--primary-color); }
+        .main-nav li.active a i { color: var(--primary-color); }
+        .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; background-color: var(--card-background); border-radius: 8px; box-shadow: var(--shadow-dark); min-width: 220px; z-index: 99; list-style: none; padding: 10px 0; margin-top: 10px; transform: translateY(10px); opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .has-dropdown:hover .dropdown-menu { display: block; transform: translateY(0); opacity: 1; visibility: visible; }
+        .dropdown-menu a { padding: 12px 20px; white-space: nowrap; display: flex; align-items: center; gap: 12px; color: var(--text-color); border-radius: 0; font-size: 14px; }
+        .dropdown-menu a:hover, .dropdown-menu a.active { background-color: var(--background-color); color: var(--primary-color); }
+        .dropdown-menu a i { font-size: 16px; color: var(--secondary-color); }
+        .dropdown-menu a.active i { color: var(--primary-color); }
+        .finance-sidebar { width: 280px; background-color: var(--card-background); border-radius: 12px; box-shadow: var(--shadow-light); padding: 20px; flex-shrink: 0; overflow-y: auto; }
+        .finance-sidebar .filter-section { border-bottom: 1px solid var(--border-color); padding: 15px 0; }
+        .finance-sidebar .filter-section:last-child { border-bottom: none; }
+        .finance-sidebar h3 { font-size: 16px; font-weight: 600; color: var(--primary-color); margin: 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .finance-sidebar .filter-content { padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .finance-sidebar .filter-content .checkbox-item, .finance-sidebar .filter-content .radio-item { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .finance-sidebar input[type="radio"], .finance-sidebar input[type="checkbox"] { margin: 0; accent-color: var(--primary-color); }
+        .sidebar-tab-menu { display: flex; justify-content: space-around; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+        .sidebar-tab-menu button { border: none; background: none; cursor: pointer; font-size: 15px; font-weight: 500; color: #666; padding: 8px 12px; border-bottom: 2px solid transparent; transition: all 0.3s ease; }
+        .sidebar-tab-menu button.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: 600; }
+        .main-content { flex-grow: 1; background-color: var(--card-background); border-radius: 12px; box-shadow: var(--shadow-light); padding: 25px; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .page-controls { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 15px; flex-wrap: wrap; }
+        .date-filter-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .date-filter-group label { font-weight: 500; }
+        .date-filter-group input[type="date"] { padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); font-family: 'Poppins', sans-serif; }
+        .search-bar { flex-grow: 1; min-width: 250px; }
+        .search-bar input { width: 100%; padding: 9px 15px; border: 1px solid var(--border-color); border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; }
+        .action-buttons { display: flex; gap: 10px; flex-shrink: 0; }
+        .action-buttons button { padding: 10px 15px; border-radius: 8px; border: none; color: var(--light-text-color); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background-color 0.3s ease; }
+        .action-buttons .btn-primary { background-color: var(--income-color); }
+        .action-buttons .btn-primary:hover { background-color: #43a047; }
+        .action-buttons .btn-secondary { background-color: var(--expense-color); }
+        .action-buttons .btn-secondary:hover { background-color: #e53935; }
+        .action-buttons .btn-export { background-color: #546e7a; }
+        .action-buttons .btn-export:hover { background-color: #455a64; }
+        .quick-filters-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .quick-filter-btn { padding: 6px 14px; font-size: 13px; border: 1px solid var(--border-color); background-color: #fff; color: var(--text-color); border-radius: 20px; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; }
+        .quick-filter-btn:hover { background-color: var(--background-color); border-color: var(--secondary-color); }
+        .quick-filter-btn.active { background-color: var(--primary-color); color: var(--light-text-color); border-color: var(--primary-color); }
+
+        .finance-summary-row { display: flex; align-items: center; justify-content: flex-end; gap: 20px; padding: 15px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; flex-wrap: wrap; }
+        .summary-item { display: flex; flex-direction: column; text-align: right; font-size: 14px; }
+        .summary-item .label { color: #666; }
+        .summary-item .value { font-size: 18px; font-weight: 600; }
+        .summary-item .income { color: var(--income-color); }
+        .summary-item .expense { color: var(--expense-color); }
+        .summary-item .balance { color: var(--primary-color); }
+        .transaction-table-container { flex-grow: 1; overflow-x: auto; }
+        .transaction-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .transaction-table thead th { text-align: left; padding: 12px 15px; background-color: var(--background-color); font-weight: 600; color: var(--primary-color); border-bottom: 2px solid var(--border-color); }
+        .transaction-table tbody tr { border-bottom: 1px solid var(--border-color); transition: background-color 0.2s ease; }
+        .transaction-table tbody tr:hover { background-color: #f5f5f5; }
+        .transaction-table td { padding: 12px 15px; vertical-align: middle; }
+        .transaction-table .cell-description { font-weight: 500; }
+        .transaction-table .cell-amount { font-weight: 600; }
+        .transaction-table .cell-amount.income { color: var(--income-color); }
+        .transaction-table .cell-amount.expense { color: var(--expense-color); }
+        .action-buttons-cell { white-space: nowrap; }
+        .action-buttons-cell button { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; margin-right: 5px; transition: background-color 0.3s ease; }
+        .action-buttons-cell .btn-edit { background-color: var(--secondary-color); color: var(--light-text-color); }
+        .action-buttons-cell .btn-delete { background-color: var(--expense-color); color: var(--light-text-color); }
+        .action-buttons-cell .btn-edit:hover, .action-buttons-cell .btn-delete:hover { opacity: 0.8; }
+        .pagination-controls { display: flex; justify-content: flex-end; align-items: center; padding: 15px 0; gap: 5px; }
+        .pagination-controls button { border: 1px solid var(--border-color); background-color: #fff; color: var(--text-color); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.3s, color 0.3s; }
+        .pagination-controls button:hover { background-color: var(--background-color); }
+        .pagination-controls button.active { background-color: var(--primary-color); color: var(--light-text-color); border-color: var(--primary-color); font-weight: 600; }
+        .pagination-controls button:disabled { cursor: not-allowed; opacity: 0.6; }
+        .main-footer { background-color: var(--primary-color); color: var(--light-text-color); padding: 20px 30px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1); flex-shrink: 0; flex-wrap: wrap; gap: 10px; }
+        .footer-info, .user-info { display: flex; gap: 25px; flex-wrap: wrap; }
+        .main-footer i { color: var(--light-text-color); margin-right: 5px; }
+        /* CSS cho hộp thông báo */
+.message-box {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #4caf50; /* Màu mặc định là thành công */
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 10000;
+    display: none; /* Ban đầu ẩn đi */
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.message-box.show {
+    display: block;
+    opacity: 1;
+}
+        .modal { display: none; position: fixed; z-index: 101; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); padding-top: 60px; }
+        .modal-content { background-color: var(--card-background); margin: 5% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: var(--shadow-dark); position: relative; }
+        .modal-content h2 { color: var(--primary-color); margin-top: 0; margin-bottom: 20px; text-align: center; }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; position: absolute; top: 15px; right: 25px; cursor: pointer; }
+        .close-button:hover, .close-button:focus { color: var(--expense-color); text-decoration: none; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-family: inherit; font-size: 14px; }
+        .btn-submit { width: 100%; padding: 12px; background-color: var(--primary-color); color: var(--light-text-color); border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; margin-top: 20px; transition: background-color 0.3s ease; }
+        .btn-submit:hover { background-color: var(--secondary-color); }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="main-header">
+            <a href="index.html" style="text-decoration: none;">
+                <h1 class="app-name"><i class="fa-solid fa-gem"></i> BI-A OXU</h1>
+            </a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html"><i class="fa-solid fa-chart-line"></i> Trang chủ</a></li>
+                    <li class="has-dropdown active">
+                        <a href="#"><i class="fa-solid fa-boxes-stacked"></i> Quản lý</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="quanly_ban.html"><i class="fa-solid fa-table-tennis-paddle-ball"></i> Quản lý bàn</a></li>
+                            <li><a href="quanly_khachhang.html"><i class="fa-solid fa-address-book"></i> Quản lý Khách hàng</a></li>
+                            <li><a href="quanly_datban.html"><i class="fa-solid fa-calendar-check"></i> Quản lý Đặt bàn</a></li>
+                            <li><a href="quanly_thuchi.html" class="active"><i class="fa-solid fa-cash-register"></i> Quản lý thu chi</a></li>
+                            <li><a href="quanly_kho.html"><i class="fa-solid fa-box-open"></i> Quản lý kho</a></li>
+                            <li><a href="quanly_nhanvien.html"><i class="fa-solid fa-users"></i> Quản lý nhân viên</a></li>
+                        </ul>
+                    </li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-chart-pie"></i> Báo cáo</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="baocao_doanhthu.html"><i class="fa-solid fa-file-invoice"></i> Doanh thu ngày</a></li>
+                            <li><a href="baocao_thongke.html"><i class="fa-solid fa-chart-bar"></i> Thống kê tuần</a></li>
+                            <li><a href="baocao_loinhuan.html"><i class="fa-solid fa-file-contract"></i> Báo cáo nhân viên</a></li>
+                             <li><a href="baocao_khachhang.html"><i class="fa-solid fa-user-tag"></i> Phân tích Khách hàng</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="cai_dat.html"><i class="fa-solid fa-gear"></i> Cài đặt</a></li>
+                    <li><a href="tro_giup.html"><i class="fa-solid fa-circle-question"></i> Trợ giúp</a></li>
+                    <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="content-wrapper">
+            <aside class="finance-sidebar">
+                <div class="sidebar-tab-menu">
+                    <button class="active">Tiền mặt</button>
+                    <button>Ngân hàng</button>
+                    <button>Tổng quỹ</button>
+                </div>
+                
+                <div class="filter-section">
+                    <h3>Chi nhánh <i class="fa-solid fa-chevron-down"></i></h3>
+                    <div class="filter-content">
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked>
+                            Chi nhánh trung tâm X
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <h3>Loại chứng từ <i class="fa-solid fa-chevron-down"></i></h3>
+                    <div class="filter-content">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="type-filter" value="income" checked>
+                            Phiếu thu
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="type-filter" value="expense" checked>
+                            Phiếu chi
+                        </label>
+                    </div>
+                </div>
+            </aside>
+            
+            <main class="main-content">
+                <div class="page-controls">
+                    <div class="date-filter-group">
+                        <label for="start-date">Từ ngày:</label>
+                        <input type="date" id="start-date">
+                        <label for="end-date">Đến ngày:</label>
+                        <input type="date" id="end-date">
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="🔍 Tìm theo mã phiếu / mô tả">
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary"><i class="fa-solid fa-plus"></i> Lập phiếu thu</button>
+                        <button class="btn-secondary"><i class="fa-solid fa-minus"></i> Lập phiếu chi</button>
+                        <button class="btn-export"><i class="fa-solid fa-arrow-up-from-bracket"></i> Xuất file</button>
+                    </div>
+                </div>
+
+                <div class="quick-filters-bar">
+                    <button class="quick-filter-btn" data-range="today">Hôm nay</button>
+                    <button class="quick-filter-btn" data-range="yesterday">Hôm qua</button>
+                    <button class="quick-filter-btn" data-range="last7days">7 ngày qua</button>
+                    <button class="quick-filter-btn active" data-range="thismonth">Tháng này</button>
+                </div>
+
+                <div class="finance-summary-row">
+                    <div class="summary-item">
+                        <span class="label">Quỹ đầu kỳ</span>
+                        <span class="value" id="beginning-balance">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Tổng thu</span>
+                        <span class="value income" id="total-income">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Tổng chi</span>
+                        <span class="value expense" id="total-expense">0</span>
+                    </div>
+                </div>
+
+                <div class="transaction-table-container">
+                    <table class="transaction-table">
+                        <thead>
+    <tr>
+        <th>Mã phiếu</th>
+        <th>Thời gian</th>
+        <th>Mô tả</th>
+        <th>Loại chi phí</th>
+        <th>Số tiền</th>
+        <th>Hành động</th>
+    </tr>
+</thead>
+                        <tbody id="transaction-table-body"></tbody>
+                    </table>
+                </div>
+                <div id="pagination-controls" class="pagination-controls"></div>
+            </main>
+        </div>
+
+        <div id="message-box" class="message-box"></div>
+
+        <footer class="main-footer">
+             <div class="footer-info">
+                <span class="copyright-info"><i class="fa-solid fa-copyright"></i> 2025 BI-A OXU. All rights reserved.</span>
+                <span class="phone-info"><i class="fa-solid fa-phone"></i> Hotline: 0902.022.665</span>
+            </div>
+            <div class="user-info">
+                <span id="footer-username"><i class="fa-solid fa-user"></i> Người dùng: </span>
+                <span><i class="fa-solid fa-circle-check"></i> Trạng thái: OK</span>
+            </div>
+        </footer>
+    </div>
+
+    <div id="addTransactionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Tạo Phiếu</h2>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label for="transactionId">Mã phiếu:</label>
+                    <input type="text" id="transactionId" required>
+                </div>
+                <div class="form-group">
+                    <label for="transactionType">Loại thu chi:</label>
+                    <select id="transactionType" required>
+                        <option value="income">Phiếu thu</option>
+                        <option value="expense">Phiếu chi</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transactionAmount">Số tiền:</label>
+                    <input type="number" id="transactionAmount" required>
+                </div>
+                <div class="form-group" id="expense-category-group" style="display: none;">
+    <label for="transactionCategory">Loại chi phí:</label>
+    <select id="transactionCategory">
+        </select>
+</div>
+
+<div class="form-group">
+    <label for="transactionDescription">Mô tả chi tiết:</label>
+    <input type="text" id="transactionDescription" required>
+</div>
+                <button type="submit" class="btn-submit">Lưu phiếu</button>
+            </form>
+        </div>
+    </div>
+    
+   <script>
+    // Hàm kiểm tra quyền truy cập trang, giữ nguyên alert vì DOM có thể chưa sẵn sàng
+    (function() {
+        const PAGE_FEATURE_ID = 'quanly_thuchi';
+        function checkUserPermission(featureId, subFeatureId = 'access') {
+            const userRole = sessionStorage.getItem('userRole');
+            if (userRole === 'admin') return true;
+            if (userRole === 'user') {
+                const permissions = JSON.parse(localStorage.getItem('biaOxuUserPermissions')) || {};
+                return permissions[featureId] && permissions[featureId][subFeatureId] === true;
+            }
+            return false;
+        }
+        if (!checkUserPermission(PAGE_FEATURE_ID)) {
+            document.body.style.display = 'none';
+            alert('Bạn không có quyền truy cập chức năng này.');
+            window.location.href = 'index.html'; 
+        }
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const loggedInUser = sessionStorage.getItem('loggedInUser');
+        if (loggedInUser) {
+            document.getElementById('footer-username').innerHTML = `<i class="fa-solid fa-user"></i> Người dùng: ${loggedInUser}`;
+        }
+
+        const PAGE_FEATURE_ID = 'quanly_thuchi';
+        function checkUserPermission(subFeatureId) {
+            const userRole = sessionStorage.getItem('userRole');
+            if (userRole === 'admin') return true;
+            if (userRole === 'user') {
+                const permissions = JSON.parse(localStorage.getItem('biaOxuUserPermissions')) || {};
+                return permissions[PAGE_FEATURE_ID] && permissions[PAGE_FEATURE_ID][subFeatureId] === true;
+            }
+            return false;
+        }
+
+        const TRANSACTIONS_STORAGE_KEY = 'biaOxuTransactions';
+        const EXPENSE_CATEGORIES_KEY = 'biaOxuExpenseCategories';
+        let currentTransactionId = null; 
+        let currentPage = 1;
+        const transactionsPerPage = 10;
+
+        // Khai báo các biến DOM
+        const modal = document.getElementById('addTransactionModal');
+        const closeButton = document.querySelector('.close-button');
+        const transactionForm = document.getElementById('transactionForm');
+        const transactionIdInput = document.getElementById('transactionId');
+        const transactionTypeInput = document.getElementById('transactionType');
+        const transactionAmountInput = document.getElementById('transactionAmount');
+        const transactionDescriptionInput = document.getElementById('transactionDescription');
+        const transactionCategoryGroup = document.getElementById('expense-category-group');
+        const transactionCategorySelect = document.getElementById('transactionCategory');
+        const formTitle = modal.querySelector('h2');
+        const searchInput = document.getElementById('searchInput');
+        const transactionTableBodyEl = document.getElementById('transaction-table-body');
+        const beginningBalanceEl = document.getElementById('beginning-balance');
+        const totalIncomeEl = document.getElementById('total-income');
+        const totalExpenseEl = document.getElementById('total-expense');
+        const paginationControlsEl = document.getElementById('pagination-controls');
+        const addIncomeBtn = document.querySelector('.btn-primary');
+        const addExpenseBtn = document.querySelector('.btn-secondary');
+        const exportBtn = document.querySelector('.btn-export');
+        const typeFilterInputs = document.querySelectorAll('input[name="type-filter"]');
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
+
+        // *** BƯỚC 1: KHAI BÁO BIẾN CHO HỘP THÔNG BÁO ***
+        const messageBox = document.getElementById('message-box');
+
+        // *** BƯỚC 2: THÊM HÀM SHOWMESSAGE ***
+        function showMessage(msg, type = 'success') {
+            messageBox.textContent = msg;
+            messageBox.style.backgroundColor = type === 'error' ? '#f44336' : '#4caf50';
+            messageBox.classList.add('show');
+            
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000); // Thông báo sẽ tự biến mất sau 3 giây
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function parseVietnameseDate(dateString) {
+            if (!dateString || typeof dateString !== 'string') return null;
+            const cleanedString = dateString.replace(',', '');
+            const parts = cleanedString.split(' ');
+            if (parts.length < 2) return null;
+            
+            const timeParts = parts[0].split(':');
+            const dateParts = parts[1].split('/');
+            if (timeParts.length < 2 || dateParts.length < 3) return null;
+
+            const day = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1;
+            const year = parseInt(dateParts[2], 10);
+            const hours = parseInt(timeParts[0], 10);
+            const minutes = parseInt(timeParts[1], 10);
+            const seconds = timeParts.length > 2 ? parseInt(timeParts[2], 10) : 0;
+            
+            if ([day, month, year, hours, minutes, seconds].some(isNaN)) return null;
+            
+            return new Date(year, month, day, hours, minutes, seconds);
+        }
+        
+        function getExpenseCategories() {
+            try {
+                const categoriesJSON = localStorage.getItem(EXPENSE_CATEGORIES_KEY);
+                return categoriesJSON ? JSON.parse(categoriesJSON) : [];
+            } catch (e) {
+                console.error("Lỗi tải loại chi phí:", e);
+                return [];
+            }
+        }
+
+        function populateCategoryDropdown(selectedCategoryName = '') {
+            const categories = getExpenseCategories();
+            transactionCategorySelect.innerHTML = '<option value="">-- Chọn loại chi phí --</option>';
+            if (categories.length > 0) {
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.name;
+                    option.textContent = cat.name;
+                    if (cat.name === selectedCategoryName) {
+                        option.selected = true;
+                    }
+                    transactionCategorySelect.appendChild(option);
+                });
+            }
+        }
+
+        function renderPage(transactionsToRender) {
+            const startIndex = (currentPage - 1) * transactionsPerPage;
+            const endIndex = startIndex + transactionsPerPage;
+            const paginatedTransactions = transactionsToRender.slice(startIndex, endIndex);
+
+            transactionTableBodyEl.innerHTML = '';
+            if (paginatedTransactions.length > 0) {
+                paginatedTransactions.forEach(transaction => {
+                    const amountText = formatCurrency(transaction.amount);
+                    const amountClass = transaction.type === 'income' ? 'income' : 'expense';
+                    const categoryCell = transaction.type === 'expense' ? `<td>${transaction.category || 'Chưa phân loại'}</td>` : '<td></td>';
+                    
+                    let actionButtonsHTML = '';
+                    if (checkUserPermission('can_edit')) {
+                        actionButtonsHTML += `<button class="btn-edit" data-id="${transaction.id}"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>`;
+                    }
+                    if (checkUserPermission('can_delete')) {
+                        actionButtonsHTML += `<button class="btn-delete" data-id="${transaction.id}"><i class="fa-solid fa-trash-can"></i> Xóa</button>`;
+                    }
+
+                    transactionTableBodyEl.innerHTML += `
+                        <tr>
+                            <td>${transaction.id}</td>
+                            <td>${transaction.date}</td>
+                            <td class="cell-description">${transaction.description}</td>
+                            ${categoryCell} 
+                            <td class="cell-amount ${amountClass}">${amountText}</td>
+                            <td class="action-buttons-cell">${actionButtonsHTML}</td>
+                        </tr>`;
+                });
+            } else {
+                transactionTableBodyEl.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888;">Không có giao dịch nào.</td></tr>';
+            }
+
+            document.querySelectorAll('.btn-edit').forEach(button => button.addEventListener('click', handleEditClick));
+            document.querySelectorAll('.btn-delete').forEach(button => button.addEventListener('click', handleDeleteClick));
+            
+            renderPaginationControls(transactionsToRender.length);
+        }
+        
+        function renderPaginationControls(totalTransactions) {
+            const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
+            paginationControlsEl.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const prevButton = document.createElement('button');
+            prevButton.innerHTML = '&laquo; Trước';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => { if (currentPage > 1) { currentPage--; applyFilters(); } });
+            paginationControlsEl.appendChild(prevButton);
+
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                if (i === currentPage) pageButton.classList.add('active');
+                pageButton.addEventListener('click', () => { currentPage = i; applyFilters(); });
+                paginationControlsEl.appendChild(pageButton);
+            }
+            
+            const nextButton = document.createElement('button');
+            nextButton.innerHTML = 'Sau &raquo;';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; applyFilters(); } });
+            paginationControlsEl.appendChild(nextButton);
+        }
+
+        function updateSummary(transactions) {
+            let totalIncome = 0, totalExpense = 0;
+            transactions.forEach(t => t.type === 'income' ? totalIncome += t.amount : totalExpense += t.amount);
+            beginningBalanceEl.textContent = formatCurrency(0);
+            totalIncomeEl.textContent = formatCurrency(totalIncome);
+            totalExpenseEl.textContent = `-${formatCurrency(totalExpense)}`;
+        }
+
+        if (checkUserPermission('can_add_income')) {
+            addIncomeBtn.addEventListener('click', () => openModal('income'));
+        } else { addIncomeBtn.style.display = 'none'; }
+
+        if (checkUserPermission('can_add_expense')) {
+            addExpenseBtn.addEventListener('click', () => openModal('expense'));
+        } else { addExpenseBtn.style.display = 'none'; }
+
+        closeButton.addEventListener('click', () => modal.style.display = "none");
+        window.addEventListener('click', e => { if (e.target == modal) modal.style.display = "none"; });
+
+        function openModal(type, transactionToEdit = null) {
+            formTitle.textContent = transactionToEdit ? 'Sửa Phiếu' : (type === 'income' ? 'Tạo Phiếu Thu' : 'Tạo Phiếu Chi');
+            currentTransactionId = transactionToEdit ? transactionToEdit.id : null;
+            transactionForm.reset();
+            
+            if (transactionToEdit) {
+                transactionIdInput.value = transactionToEdit.id;
+                transactionTypeInput.value = transactionToEdit.type;
+                transactionAmountInput.value = transactionToEdit.amount;
+                transactionDescriptionInput.value = transactionToEdit.description;
+                populateCategoryDropdown(transactionToEdit.category);
+            } else {
+                const prefix = type === 'income' ? 'PT-HD-' : 'PC-HD-';
+                const randomNumber = Math.floor(Math.random() * 100000000);
+                const uniqueId = String(randomNumber).padStart(8, '0');
+                transactionIdInput.value = `${prefix}${uniqueId}`;
+                transactionTypeInput.value = type;
+                populateCategoryDropdown();
+            }
+            
+            transactionIdInput.readOnly = true;
+
+            if (transactionTypeInput.value === 'expense') {
+                transactionCategoryGroup.style.display = 'block';
+                transactionCategorySelect.required = true;
+            } else {
+                transactionCategoryGroup.style.display = 'none';
+                transactionCategorySelect.required = false;
+            }
+
+            modal.style.display = "block";
+        }
+        
+        transactionTypeInput.addEventListener('change', () => {
+            if (transactionTypeInput.value === 'expense') {
+                transactionCategoryGroup.style.display = 'block';
+                transactionCategorySelect.required = true;
+            } else {
+                transactionCategoryGroup.style.display = 'none';
+                transactionCategorySelect.required = false;
+            }
+        });
+
+        // *** BƯỚC 3.3: TÍCH HỢP SHOWMESSAGE VÀO FORM SUBMIT ***
+        transactionForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const isEditing = !!currentTransactionId;
+            const canAdd = (transactionTypeInput.value === 'income' && checkUserPermission('can_add_income')) || 
+                           (transactionTypeInput.value === 'expense' && checkUserPermission('can_add_expense'));
+
+            if ((isEditing && !checkUserPermission('can_edit')) || (!isEditing && !canAdd)) {
+                showMessage('Bạn không có quyền thực hiện hành động này.', 'error');
+                return;
+            }
+            
+            const amount = parseFloat(transactionAmountInput.value);
+            const description = transactionDescriptionInput.value.trim();
+            const type = transactionTypeInput.value;
+            const category = transactionCategorySelect.value;
+
+            if (!description || isNaN(amount) || amount <= 0) {
+                showMessage('Vui lòng nhập đầy đủ thông tin và số tiền hợp lệ.', 'error');
+                return;
+            }
+            
+            if (type === 'expense' && !category) {
+                showMessage('Vui lòng chọn một loại chi phí.', 'error');
+                return;
+            }
+
+            let transactions = JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) || [];
+            
+            const newTransactionData = {
+                id: transactionIdInput.value,
+                type: type,
+                description: description,
+                amount: amount,
+                category: type === 'expense' ? category : null,
+                date: new Date().toLocaleString('vi-VN', { hour12: false })
+            };
+
+            if (currentTransactionId) {
+                const index = transactions.findIndex(t => t.id === currentTransactionId);
+                if (index > -1) {
+                    transactions[index] = { ...transactions[index], ...newTransactionData };
+                    showMessage('Cập nhật phiếu thành công!');
+                }
+            } else {
+                transactions.unshift(newTransactionData);
+                showMessage('Tạo phiếu mới thành công!');
+            }
+            localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+            modal.style.display = "none";
+            applyFilters();
+        });
+
+        function handleEditClick(event) {
+            if (!checkUserPermission('can_edit')) { 
+                showMessage('Bạn không có quyền thực hiện chức năng này.', 'error'); 
+                return; 
+            }
+            const id = event.currentTarget.dataset.id;
+            const transaction = (JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) || []).find(t => t.id === id);
+            if (transaction) {
+                openModal(transaction.type, transaction);
+            }
+        }
+
+        function handleDeleteClick(event) {
+            if (!checkUserPermission('can_delete')) { 
+                showMessage('Bạn không có quyền thực hiện chức năng này.', 'error');
+                return; 
+            }
+            if (confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) {
+                const id = event.currentTarget.dataset.id;
+                let transactions = (JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) || []).filter(t => t.id !== id);
+                localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+                showMessage('Đã xóa giao dịch thành công.');
+                applyFilters();
+            }
+        }
+        
+        function initializeSampleData() {
+            const categories = getExpenseCategories();
+            if (!localStorage.getItem(TRANSACTIONS_STORAGE_KEY) && categories.length > 0) {
+                const sampleTransactions = [];
+                for (let i = 1; i <= 3; i++) {
+                    sampleTransactions.push({
+                        id: `PT-HD-${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`, type: 'income', description: `Thu tiền bàn ${i}`,
+                        amount: 150000 + Math.floor(Math.random() * 200000),
+                        date: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toLocaleString('vi-VN', { hour12: false }),
+                        category: null
+                    });
+                     sampleTransactions.push({
+                        id: `PC-HD-${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`, type: 'expense', description: `Chi mua nước ngọt lô ${i}`,
+                        amount: 80000 + Math.floor(Math.random() * 100000),
+                        date: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toLocaleString('vi-VN', { hour12: false }),
+                        category: categories[2] ? categories[2].name : 'Chi phí vận hành khác'
+                    });
+                }
+                localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(sampleTransactions));
+            }
+        }
+
+        function applyFilters() {
+            const allTransactions = JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) || [];
+            
+           allTransactions.sort((a, b) => {
+                const dateA = parseVietnameseDate(a.date);
+                const dateB = parseVietnameseDate(b.date);
+                if (!dateA || !dateB) return 0;
+                return dateB - dateA;
+            });
+
+            const searchQuery = searchInput.value.toLowerCase().trim();
+            const selectedTypes = Array.from(typeFilterInputs).filter(i => i.checked).map(i => i.value);
+            
+            const startDate = new Date(startDateInput.value);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(endDateInput.value);
+            endDate.setHours(23, 59, 59, 999);
+
+            let filteredTransactions = allTransactions.filter(t => {
+                const txDate = parseVietnameseDate(t.date);
+                if (!txDate) return false;
+                
+                const isTypeMatch = selectedTypes.includes(t.type);
+                const isSearchMatch = !searchQuery || t.id.toLowerCase().includes(searchQuery) || t.description.toLowerCase().includes(searchQuery);
+                const isDateMatch = txDate >= startDate && txDate <= endDate;
+                
+                return isTypeMatch && isSearchMatch && isDateMatch;
+            });
+            
+            updateSummary(filteredTransactions);
+            renderPage(filteredTransactions);
+        }
+
+        function initializeNewFilters() {
+            quickFilterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    quickFilterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const range = btn.dataset.range;
+                    const today = new Date();
+                    let startDate = new Date(), endDate = new Date();
+
+                    switch (range) {
+                        case 'today':       startDate = endDate = today; break;
+                        case 'yesterday':   startDate = endDate = new Date(new Date().setDate(today.getDate() - 1)); break;
+                        case 'last7days':   endDate = new Date(); startDate = new Date(new Date().setDate(today.getDate() - 6)); break;
+                        case 'thismonth':   endDate = new Date(); startDate = new Date(today.getFullYear(), today.getMonth(), 1); break;
+                    }
+                    startDateInput.valueAsDate = startDate;
+                    endDateInput.valueAsDate = endDate;
+                    applyFilters();
+                });
+            });
+            
+            document.querySelector('.quick-filter-btn[data-range="thismonth"]').click();
+
+            const clearActiveFilter = () => quickFilterBtns.forEach(b => b.classList.remove('active'));
+            startDateInput.addEventListener('change', () => { clearActiveFilter(); applyFilters(); });
+            endDateInput.addEventListener('change', () => { clearActiveFilter(); applyFilters(); });
+            typeFilterInputs.forEach(input => input.addEventListener('change', () => { currentPage = 1; applyFilters(); }));
+            searchInput.addEventListener('input', () => { currentPage = 1; applyFilters(); });
+        }
+
+        exportBtn.addEventListener('click', () => {
+            const allTransactions = JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) || [];
+            
+            const searchQuery = searchInput.value.toLowerCase().trim();
+            const selectedTypes = Array.from(typeFilterInputs).filter(i => i.checked).map(i => i.value);
+            const startDate = new Date(startDateInput.value); startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(endDateInput.value); endDate.setHours(23, 59, 59, 999);
+
+            let dataToExport = allTransactions.filter(t => {
+                const txDate = parseVietnameseDate(t.date);
+                if(!txDate) return false;
+                
+                return selectedTypes.includes(t.type) &&
+                       (!searchQuery || t.id.toLowerCase().includes(searchQuery) || t.description.toLowerCase().includes(searchQuery)) &&
+                       (txDate >= startDate && txDate <= endDate);
+            });
+
+            if (dataToExport.length === 0) {
+                showMessage("Không có dữ liệu phù hợp để xuất file.", "error");
+                return;
+            }
+
+            const formattedData = dataToExport.map(t => ({
+                "Mã Phiếu": t.id, 
+                "Thời Gian": t.date,
+                "Loại Phiếu": t.type === 'income' ? 'Phiếu Thu' : 'Phiếu Chi',
+                "Loại Chi Phí": t.type === 'expense' ? t.category : '',
+                "Mô Tả": t.description, 
+                "Số Tiền": t.amount
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(formattedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Sổ Quỹ");
+            
+            const today = new Date();
+            const fileName = `SoQuy_${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+        });
+        
+        initializeSampleData();
+        initializeNewFilters();
+        updateStoreInfo();
+    });
+
+    function updateStoreInfo() {
+        const savedData = localStorage.getItem('general-form');
+        if (savedData) {
+            const settings = JSON.parse(savedData);
+            if (settings['store-name']) {
+                document.querySelector('.main-header .app-name').innerHTML = `<i class="fa-solid fa-gem"></i> ${settings['store-name']}`;
+                document.querySelector('.main-footer .copyright-info').innerHTML = `<i class="fa-solid fa-copyright"></i> 2025 ${settings['store-name']}. All rights reserved.`;
+            }
+            if (settings.phone) {
+                document.querySelector('.main-footer .phone-info').innerHTML = `<i class="fa-solid fa-phone"></i> Hotline: ${settings.phone}`;
+            }
+        }
+    }
+    
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        });
+    }
+</script>
+</body>
+</html>

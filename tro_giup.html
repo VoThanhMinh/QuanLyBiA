@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trợ giúp | PHẦN MỀM QUẢN LÝ QUÁN BI-A</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // Kiểm tra trạng thái đăng nhập
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    
+    <style>
+        /* === FONT AND COLOR VARIABLES === */
+        :root {
+            --primary-color: #0d47a1;
+            --secondary-color: #1976d2;
+            --text-color: #333;
+            --light-text-color: #f0f4f8;
+            --background-color: #eef2f6;
+            --card-background: #ffffff;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-dark: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* === GLOBAL STYLES === */
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; overflow-x: hidden; }
+        .app-container { display: flex; flex-direction: column; min-height: 100vh; }
+        .content-wrapper { display: flex; flex: 1; overflow: hidden; }
+
+        /* === HEADER === */
+        .main-header {
+            background-color: var(--card-background);
+            box-shadow: var(--shadow-light);
+            height: 70px;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .main-header .app-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .main-header .app-name i { color: var(--secondary-color); }
+        .main-nav ul { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; }
+        .main-nav li { position: relative; margin: 0 5px; }
+        .main-nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .main-nav a i { font-size: 18px; color: var(--secondary-color); }
+        .main-nav a:hover,
+        .main-nav li.active a { background-color: var(--background-color); color: var(--primary-color); }
+        .main-nav li.active a i { color: var(--primary-color); }
+
+        /* Dropdown Menu */
+        .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; background-color: var(--card-background); border-radius: 8px; box-shadow: var(--shadow-dark); min-width: 220px; z-index: 99; list-style: none; padding: 10px 0; margin-top: 10px; transform: translateY(10px); opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .has-dropdown:hover .dropdown-menu { display: block; transform: translateY(0); opacity: 1; visibility: visible; }
+        .dropdown-menu a { padding: 12px 20px; white-space: nowrap; display: flex; align-items: center; gap: 12px; color: var(--text-color); border-radius: 0; font-size: 14px; }
+        .dropdown-menu a:hover { background-color: var(--background-color); color: var(--primary-color); }
+        .dropdown-menu a i { font-size: 16px; color: var(--secondary-color); }
+
+        /* === MAIN CONTENT === */
+        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .content-panel { background-color: var(--card-background); padding: 40px; border-radius: 12px; box-shadow: var(--shadow-light); }
+        .content-panel h2 { color: var(--primary-color); margin-top: 0; font-size: 28px; font-weight: 600; display: flex; align-items: center; gap: 15px; }
+        .content-panel p.intro-text { font-size: 16px; color: #666; }
+
+        /* === FOOTER === */
+        .main-footer {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 20px 30px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer-info, .user-info { display: flex; gap: 25px; }
+        .main-footer i { color: var(--light-text-color); margin-right: 5px; }
+        
+        /* === STYLES FOR ACCORDION ON HELP PAGE === */
+        .help-accordion {
+            margin-top: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid #ddd;
+        }
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            background-color: #f9fafb;
+            color: var(--primary-color);
+            cursor: pointer;
+            padding: 18px 25px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background-color: #f1f5f9;
+        }
+
+        .accordion-header .toggle-icon {
+            font-size: 16px;
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .accordion-item.active .accordion-header .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            padding: 0 25px;
+            background-color: white;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+            color: #444;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .accordion-content .content-inner {
+             padding: 20px 0;
+        }
+
+        .accordion-content ul {
+            padding-left: 20px;
+        }
+        .accordion-content li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="main-header">
+            <a href="index.html" style="text-decoration: none;">
+                <h1 class="app-name"><i class="fa-solid fa-gem"></i> BI-A OXU</h1>
+            </a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html"><i class="fa-solid fa-chart-line"></i> Trang chủ</a></li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-boxes-stacked"></i> Quản lý</a>
+                        <ul class="dropdown-menu">
+    <li><a href="quanly_ban.html"><i class="fa-solid fa-table-tennis-paddle-ball"></i> Quản lý bàn</a></li>
+    <li><a href="quanly_khachhang.html"><i class="fa-solid fa-address-book"></i> Quản lý Khách hàng</a></li>
+    <li><a href="quanly_datban.html"><i class="fa-solid fa-calendar-check"></i> Quản lý Đặt bàn</a></li>
+    <li><a href="quanly_thuchi.html"><i class="fa-solid fa-cash-register"></i> Quản lý thu chi</a></li>
+    <li><a href="quanly_kho.html"><i class="fa-solid fa-box-open"></i> Quản lý kho</a></li>
+    <li><a href="quanly_nhanvien.html"><i class="fa-solid fa-users"></i> Quản lý nhân viên</a></li>
+</ul>
+                    </li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-chart-pie"></i> Báo cáo</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="baocao_doanhthu.html"><i class="fa-solid fa-file-invoice"></i> Doanh thu ngày</a></li>
+                            <li><a href="baocao_thongke.html"><i class="fa-solid fa-chart-bar"></i> Thống kê tuần</a></li>
+                            <li><a href="baocao_loinhuan.html"><i class="fa-solid fa-file-contract"></i> Báo cáo nhân viên</a></li>
+                             <li><a href="baocao_khachhang.html"><i class="fa-solid fa-user-tag"></i> Phân tích Khách hàng</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="cai_dat.html"><i class="fa-solid fa-gear"></i> Cài đặt</a></li>
+                    <li class="active"><a href="tro_giup.html"><i class="fa-solid fa-circle-question"></i> Trợ giúp</a></li>
+                    <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="content-wrapper">
+            <main class="main-content">
+                <div class="content-panel">
+                    <h2><i class="fa-solid fa-circle-question"></i> Trợ giúp</h2>
+                    <p class="intro-text">Chào mừng đến với trang Trợ giúp. Bạn có thể tìm thấy các hướng dẫn sử dụng phần mềm và quy định dành cho nhân viên tại đây.</p>
+                    
+                    <div id="dynamic-help-content">
+                        </div>
+
+                </div>
+            </main>
+        </div>
+
+        <footer class="main-footer">
+            <div class="footer-info">
+                <span class="copyright-info"><i class="fa-solid fa-copyright"></i> 2025 BI-A OXU. All rights reserved.</span>
+                <span class="phone-info"><i class="fa-solid fa-phone"></i> Hotline: 0902.022.665</span>
+            </div>
+            <div class="user-info">
+    <span id="footer-username"><i class="fa-solid fa-user"></i> Người dùng: </span>
+    <span><i class="fa-solid fa-circle-check"></i> Trạng thái: OK</span>
+</div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Lấy tên người dùng từ sessionStorage
+    const loggedInUser = sessionStorage.getItem('loggedInUser');
+
+    // Nếu có tên người dùng, cập nhật nó vào footer
+    if (loggedInUser) {
+        const usernameElement = document.getElementById('footer-username');
+        if (usernameElement) {
+            usernameElement.innerHTML = `<i class="fa-solid fa-user"></i> Người dùng: ${loggedInUser}`;
+        }
+    }
+            // === START: DYNAMIC HELP CONTENT LOADER (ACCORDION VERSION) ===
+            const HELP_CONTENT_KEY = 'biaOxuHelpContent';
+            const helpContainer = document.getElementById('dynamic-help-content');
+            
+            function renderHelpContent() {
+                const storedContent = localStorage.getItem(HELP_CONTENT_KEY);
+                // Dữ liệu mặc định nếu chưa có gì trong localStorage
+                const defaultHelpContent = [
+                    { title: 'Giới thiệu', content: '<p>Chào mừng bạn đến với phần mềm quản lý quán Bi-a OXU.</p>' },
+                    { title: 'Quản lý bàn', content: '<ul><li>Để bắt đầu, hãy vào mục <strong>Quản lý bàn</strong>.</li><li>Nhấn vào bàn trống để bắt đầu tính giờ.</li></ul>' }
+                ];
+                const contentData = storedContent ? JSON.parse(storedContent) : defaultHelpContent;
+
+                if (!contentData || contentData.length === 0) {
+                    helpContainer.innerHTML = '<p>Chưa có nội dung trợ giúp. Vui lòng vào trang Cài đặt để thêm.</p>';
+                    return;
+                }
+
+                const accordionWrapper = document.createElement('div');
+                accordionWrapper.className = 'help-accordion';
+
+                contentData.forEach(item => {
+                    // Tạo các thành phần cho accordion
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'accordion-item';
+
+                    // Chèn trực tiếp HTML đã lưu vào cấu trúc accordion
+                    itemDiv.innerHTML = `
+                        <button class="accordion-header">
+                            <span>${item.title}</span>
+                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="content-inner">${item.content}</div>
+                        </div>
+                    `;
+                    accordionWrapper.appendChild(itemDiv);
+                });
+
+                helpContainer.innerHTML = '';
+                helpContainer.appendChild(accordionWrapper);
+
+                // Thêm sự kiện click cho các header để mở/đóng
+                const headers = accordionWrapper.querySelectorAll('.accordion-header');
+                headers.forEach(header => {
+                    header.addEventListener('click', () => {
+                        const item = header.parentElement;
+                        item.classList.toggle('active');
+
+                        const content = header.nextElementSibling;
+                        if (item.classList.contains('active')) {
+                            // Set max-height bằng chiều cao thực của nội dung để animation mượt mà
+                            content.style.maxHeight = content.scrollHeight + 'px';
+                        } else {
+                            content.style.maxHeight = '0px';
+                        }
+                    });
+                });
+            }
+
+            renderHelpContent();
+            // === END: DYNAMIC HELP CONTENT LOADER ===
+
+
+            // === LOGIC CẬP NHẬT TÊN QUÁN VÀ HOTLINE TỪ CÀI ĐẶT ===
+            function updateStoreInfo() {
+                const savedData = localStorage.getItem('general-form');
+                if (savedData) {
+                    const settings = JSON.parse(savedData);
+                    
+                    const storeNameElement = document.querySelector('.main-header .app-name');
+                    if (storeNameElement && settings['store-name']) {
+                        storeNameElement.innerHTML = `<i class="fa-solid fa-gem"></i> ${settings['store-name']}`;
+                    }
+
+                    const phoneElement = document.querySelector('.main-footer .phone-info');
+                    if (phoneElement && settings.phone) {
+                        phoneElement.innerHTML = `<i class="fa-solid fa-phone"></i> Hotline: ${settings.phone}`;
+                    }
+
+                    const copyrightElement = document.querySelector('.main-footer .copyright-info');
+                    if (copyrightElement && settings['store-name']) {
+                        copyrightElement.innerHTML = `<i class="fa-solid fa-copyright"></i> 2025 ${settings['store-name']}. All rights reserved.`;
+                    }
+                }
+            }
+            updateStoreInfo();
+
+            // === LOGIC ĐĂNG XUẤT ===
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    sessionStorage.removeItem('isLoggedIn');
+                    sessionStorage.removeItem('userRole');
+                    window.location.href = 'login.html';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

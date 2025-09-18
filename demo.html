@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toastify.js - Tất cả các dạng Demo</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        #successBtn { background-color: #28a745; }
+        #errorBtn { background-color: #dc3545; }
+        #warningBtn { background-color: #ffc107; color: #333;}
+        #infoBtn { background-color: #17a2b8; }
+        #customBtn { background-color: #6f42c1; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Các Dạng Thông Báo Toastify.js</h1>
+        <p style="text-align: center; color: #666;">Nhấn vào các nút bên dưới để xem các dạng thông báo khác nhau.</p>
+        <div class="button-group">
+            <button id="successBtn">Thông báo Thành công</button>
+            <button id="errorBtn">Thông báo Lỗi</button>
+            <button id="warningBtn">Thông báo Cảnh báo</button>
+            <button id="infoBtn">Thông báo Thông tin</button>
+            <button id="customBtn">Thông báo Tùy chỉnh</button>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        // Thông báo thành công
+        document.getElementById('successBtn').addEventListener('click', function() {
+            Toastify({
+                text: "Dữ liệu đã được lưu thành công!",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "linear-gradient(to right, #28a745, #218838)",
+                }
+            }).showToast();
+        });
+
+        // Thông báo lỗi
+        document.getElementById('errorBtn').addEventListener('click', function() {
+            Toastify({
+                text: "Có lỗi xảy ra, vui lòng thử lại!",
+                duration: 4000,
+                close: true,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: "linear-gradient(to right, #dc3545, #c82333)",
+                }
+            }).showToast();
+        });
+
+        // Thông báo cảnh báo
+        document.getElementById('warningBtn').addEventListener('click', function() {
+            Toastify({
+                text: "Vui lòng điền đầy đủ thông tin bắt buộc!",
+                duration: 5000,
+                close: true,
+                gravity: "top",
+                position: "left",
+                style: {
+                    background: "linear-gradient(to right, #ffc107, #e0a800)",
+                    color: "#333"
+                }
+            }).showToast();
+        });
+        
+        // Thông báo thông tin
+        document.getElementById('infoBtn').addEventListener('click', function() {
+            Toastify({
+                text: "Bạn có thể nhấp vào thông báo này để đóng.",
+                duration: 3000,
+                close: true,
+                gravity: "bottom",
+                position: "right",
+                style: {
+                    background: "linear-gradient(to right, #17a2b8, #138496)",
+                }
+            }).showToast();
+        });
+
+        // Thông báo tùy chỉnh
+        document.getElementById('customBtn').addEventListener('click', function() {
+            Toastify({
+                text: "Thông báo này có vị trí và hiệu ứng riêng biệt!",
+                duration: 3000,
+                close: true,
+                gravity: "bottom",
+                position: "center",
+                offset: {
+                    x: 50, // dịch chuyển 50px sang phải
+                    y: 10 // dịch chuyển 10px lên trên
+                },
+                style: {
+                    background: "linear-gradient(to right, #6f42c1, #800080)",
+                    borderRadius: "10px"
+                }
+            }).showToast();
+        });
+    </script>
+
+</body>
+</html>

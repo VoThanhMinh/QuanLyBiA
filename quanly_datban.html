@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Đặt Bàn - BI-A OXU</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        :root {
+            --primary-color: #0d47a1; --secondary-color: #1976d2; --text-color: #333;
+            --light-text-color: #f0f4f8; --background-color: #eef2f6; --card-background: #ffffff;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); --shadow-dark: 0 2px 10px rgba(0, 0, 0, 0.15);
+            --danger-color: #f44336; --success-color: #4CAF50; --warning-color: #fb8c00; --grey-color: #757575;
+        }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; }
+        .app-container { display: flex; flex-direction: column; min-height: 100vh; }
+        .main-header { background-color: var(--card-background); box-shadow: var(--shadow-light); height: 70px; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+        .main-header .app-name { font-size: 24px; font-weight: 600; color: var(--primary-color); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .main-header .app-name i { color: var(--secondary-color); }
+        .main-nav ul { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; }
+        .main-nav li { position: relative; margin: 0 5px; }
+        .main-nav a { text-decoration: none; color: var(--text-color); padding: 12px 18px; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; border-radius: 8px; transition: all 0.3s ease; }
+        .main-nav a i { font-size: 18px; color: var(--secondary-color); }
+        .main-nav a:hover, .main-nav li.active > a { background-color: var(--background-color); color: var(--primary-color); }
+        .main-nav li.active > a i { color: var(--primary-color); }
+        .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; background-color: var(--card-background); border-radius: 8px; box-shadow: var(--shadow-dark); min-width: 240px; z-index: 99; list-style: none; padding: 10px 0; margin-top: 10px; transform: translateY(10px); opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .has-dropdown:hover .dropdown-menu { display: block; transform: translateY(0); opacity: 1; visibility: visible; }
+        .dropdown-menu a { padding: 12px 20px; border-radius: 0; }
+        .dropdown-menu a.active { background-color: var(--background-color); color: var(--primary-color); }
+        .dropdown-menu a i { font-size: 16px; }
+        .main-content { flex-grow: 1; padding: 30px; }
+        .content-panel { background-color: var(--card-background); padding: 40px; border-radius: 12px; box-shadow: var(--shadow-light); }
+        .content-panel h2 { color: var(--primary-color); margin-top: 0; font-size: 28px; }
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .filters label { font-weight: 500; }
+        .filters input[type="date"], .filters input[type="text"] { padding: 8px; border: 1px solid #ddd; border-radius: 8px; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-sm { padding: 8px 15px; font-size: 14px; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: #f0f4f8; color: var(--primary-color); border: 1px solid #d1d9e6; }
+        .btn-secondary:hover { background-color: #e4e9f1; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-warning { background-color: var(--warning-color); color: white; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        .data-table th { background-color: var(--background-color); font-weight: 600; color: var(--primary-color); }
+        .status-badge { padding: 5px 10px; border-radius: 20px; color: white; font-size: 12px; font-weight: 500; }
+        .status-confirmed { background-color: var(--primary-color); }
+        .status-completed { background-color: var(--success-color); }
+        .status-cancelled { background-color: var(--grey-color); }
+        .status-noshow { background-color: #333; }
+        .overdue-text { color: var(--danger-color); font-size: 12px; font-style: italic; margin-left: 5px; }
+        .actions-cell { display: flex; flex-wrap: wrap; gap: 5px; }
+        .pagination-controls { text-align: center; margin-top: 25px; }
+        .pagination-controls button { margin: 0 3px; }
+        .main-footer { background-color: var(--primary-color); color: var(--light-text-color); padding: 20px 30px;  font-size: 13px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1); }
+        .footer-info, .user-info { display: flex; gap: 25px; }
+        .main-footer i { margin-right: 5px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; color: var(--primary-color); }
+        .close-btn { font-size: 28px; cursor: pointer; color: #aaa; font-weight: bold; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        /* Đảm bảo chiều cao và căn chỉnh đều cho các trường */
+.form-group input, 
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box; /* Quan trọng để padding không làm tăng chiều rộng */
+    height: 42px; /* Chiều cao cố định */
+    line-height: 1.2; /* Căn chỉnh text trong input */
+}
+
+/* Chỉnh lại kiểu cho nút */
+/* Điều chỉnh lại cho các nút nhỏ gọn hơn */
+.btn {
+    padding: 10px 18px; /* Giảm khoảng đệm dọc và ngang */
+    font-size: 14px; /* Giảm nhẹ cỡ chữ để nút cân đối hơn */
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: auto; /* Để nút tự co giãn theo nội dung */
+    justify-content: center;
+    /* Không cần min-width, để nút tự co giãn */
+}
+
+/* Điều chỉnh lại khoảng cách và căn chỉnh cho các nút trong modal */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Đẩy các nút về bên phải */
+    gap: 10px; /* Khoảng cách giữa các nút */
+    margin-top: 20px;
+}
+
+/* Kiểu cho checkbox và label để checkbox nằm trước */
+#saveNewCustomerContainer label {
+    display: flex; /* Dùng flexbox để căn chỉnh checkbox và text */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    gap: 8px; /* Khoảng cách giữa checkbox và text */
+    font-weight: normal; /* Không in đậm label này */
+    cursor: pointer;
+}
+#saveNewCustomerContainer input[type="checkbox"] {
+    margin: 0; /* Loại bỏ margin mặc định */
+    width: auto; /* Để checkbox có kích thước tự nhiên */
+    height: 18px; /* Kích thước checkbox */
+    accent-color: var(--primary-color); /* Màu sắc của checkbox khi được chọn */
+}
+        
+        /* CSS CHO MODAL ĐƯỢC ĐỒNG BỘ */
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* CSS CHO HỘP THÔNG BÁO ĐƯỢC ĐỒNG BỘ */
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="message-box" class="message-box"></div>
+
+<script>
+    // === KIỂM TRA QUYỀN TRUY CẬP TRANG ===
+    (function() {
+        const PAGE_FEATURE_ID = 'quanly_datban';
+        const userRole = sessionStorage.getItem('userRole');
+        
+        if (userRole === 'user') {
+            const permissions = JSON.parse(localStorage.getItem('biaOxuUserPermissions')) || {};
+            const hasPermission = permissions[PAGE_FEATURE_ID] && permissions[PAGE_FEATURE_ID].access === true;
+
+            if (!hasPermission) {
+                document.body.style.display = 'none';
+                alert('Bạn không có quyền truy cập chức năng này.');
+                window.location.href = 'index.html';
+            }
+        }
+    })();
+</script>
+
+    <div class="app-container">
+        <header class="main-header">
+            <a href="index.html" class="app-name"><i class="fa-solid fa-gem"></i> BI-A OXU</a>
+            <nav class="main-nav">
+                 <ul>
+                    <li><a href="index.html"><i class="fa-solid fa-chart-line"></i> Trang chủ</a></li>
+                    <li class="has-dropdown active">
+                        <a href="#"><i class="fa-solid fa-boxes-stacked"></i> Quản lý</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="quanly_ban.html"><i class="fa-solid fa-table-tennis-paddle-ball"></i> Quản lý bàn</a></li>
+                            <li><a href="quanly_khachhang.html"><i class="fa-solid fa-address-book"></i> Quản lý Khách hàng</a></li>
+                            <li><a href="quanly_datban.html" class="active"><i class="fa-solid fa-calendar-check"></i> Quản lý Đặt bàn</a></li>
+                            <li><a href="quanly_thuchi.html"><i class="fa-solid fa-cash-register"></i> Quản lý thu chi</a></li>
+                            <li><a href="quanly_kho.html"><i class="fa-solid fa-box-open"></i> Quản lý kho</a></li>
+                            <li><a href="quanly_nhanvien.html"><i class="fa-solid fa-users"></i> Quản lý nhân viên</a></li>
+                        </ul>
+                    </li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-chart-pie"></i> Báo cáo</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="baocao_doanhthu.html"><i class="fa-solid fa-file-invoice"></i> Doanh thu ngày</a></li>
+                            <li><a href="baocao_thongke.html"><i class="fa-solid fa-chart-bar"></i> Thống kê tuần</a></li>
+                            <li><a href="baocao_loinhuan.html"><i class="fa-solid fa-file-contract"></i> Báo cáo nhân viên</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="cai_dat.html"><i class="fa-solid fa-gear"></i> Cài đặt</a></li>
+                    <li><a href="tro_giup.html"><i class="fa-solid fa-circle-question"></i> Trợ giúp</a></li>
+                    <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="content-panel">
+                <h2>Lịch Đặt Bàn</h2>
+                <div class="controls">
+                    <div class="filters">
+                        <label for="startDateFilter">Từ ngày:</label>
+                        <input type="date" id="startDateFilter">
+                        <label for="endDateFilter">Đến ngày:</label>
+                        <input type="date" id="endDateFilter">
+                        <div id="date-presets" style="display: flex; gap: 5px; margin-left: 5px;">
+                            <button id="todayBtn" class="btn btn-sm btn-primary">Hôm nay</button>
+                            <button id="yesterdayBtn" class="btn btn-sm btn-secondary">Hôm qua</button>
+                            <button id="last7DaysBtn" class="btn btn-sm btn-secondary">7 ngày qua</button>
+                            <button id="thisMonthBtn" class="btn btn-sm btn-secondary">Tháng này</button>
+                        </div>
+                         <input type="text" id="searchInput" placeholder="Tìm theo tên/SĐT khách hàng..." style="margin-left: 10px;">
+                    </div>
+                    <button id="addBookingBtn" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tạo Lịch Đặt Mới</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Thời Gian</th>
+                            <th>Tên Bàn</th>
+                            <th>Khách Hàng</th>
+                            <th>Trạng Thái</th>
+                            <th style="width: 250px;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingTableBody"></tbody>
+                </table>
+                <div id="pagination-container" class="pagination-controls"></div>
+            </div>
+        </main>
+        
+        <footer class="main-footer">
+             <div class="footer-info">
+                <span class="copyright-info"><i class="fa-solid fa-copyright"></i> 2025 BI-A OXU. All rights reserved.</span>
+                <span class="phone-info"><i class="fa-solid fa-phone"></i> Hotline: </span>
+            </div>
+            <div class="user-info">
+                <span id="footer-username"><i class="fa-solid fa-user"></i> Người dùng: </span>
+                <span><i class="fa-solid fa-circle-check"></i> Trạng thái: OK</span>
+            </div>
+        </footer>
+    </div>
+
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tạo Lịch Đặt Bàn</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form id="bookingForm">
+                <input type="hidden" id="bookingId">
+                <div class="form-group">
+                    <label for="bookingDateTime">Thời gian đặt</label>
+                    <input type="datetime-local" id="bookingDateTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="tableId">Chọn bàn</label>
+                    <select id="tableId" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="customerId">Chọn khách hàng (nếu có)</label>
+                    <select id="customerId"></select>
+                </div>
+                 <div class="form-group">
+                    <label for="customerName">Tên khách đặt</label>
+                    <input type="text" id="customerName" required placeholder="Nhập tên nếu là khách mới">
+                </div>
+                <div class="form-group">
+                    <label for="customerPhone">SĐT khách đặt</label>
+                    <input type="tel" id="customerPhone" required placeholder="Nhập SĐT để liên hệ">
+                </div>
+                <div class="form-group">
+                    <label for="notes">Ghi chú</label>
+                    <input type="text" id="notes">
+                </div>
+                <div class="form-group" id="saveNewCustomerContainer" style="display: none;">
+    <label>
+        <input type="checkbox" id="saveNewCustomer"> Tự động lưu thông tin khách hàng mới
+    </label>
+</div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-btn">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu Lịch Đặt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // === HÀM HIỂN THỊ THÔNG BÁO MỚI (ĐỒNG BỘ) ===
+        const messageBox = document.getElementById('message-box');
+        const showMessage = (msg, type = 'success') => {
+            messageBox.textContent = msg;
+            messageBox.style.backgroundColor = type === 'error' ? '#f44336' : (type === 'warning' ? '#fb8c00' : '#4caf50');
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 3000);
+        };
+
+        // --- LOGIC CHUNG CHO HEADER/FOOTER ---
+        const loggedInUser = sessionStorage.getItem('loggedInUser');
+        if (loggedInUser) {
+            document.getElementById('footer-username').innerHTML = `<i class="fa-solid fa-user"></i> Người dùng: ${loggedInUser}`;
+        }
+        function updateStoreInfo() {
+            const savedData = localStorage.getItem('general-form');
+            if (savedData) {
+                const settings = JSON.parse(savedData);
+                const storeName = settings['store-name'] || 'BI-A OXU';
+                const phone = settings.phone || '';
+                document.querySelector('.main-header .app-name').innerHTML = `<i class="fa-solid fa-gem"></i> ${storeName}`;
+                document.querySelector('.main-footer .phone-info').innerHTML = `<i class="fa-solid fa-phone"></i> Hotline: ${phone}`;
+                document.querySelector('.main-footer .copyright-info').innerHTML = `<i class="fa-solid fa-copyright"></i> 2025 ${storeName}. All rights reserved.`;
+            }
+        }
+        updateStoreInfo();
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        // === BẮT ĐẦU: PHÂN QUYỀN GIAO DIỆN VÀ CHỨC NĂNG ===
+        const userRole = sessionStorage.getItem('userRole');
+        const permissions = JSON.parse(localStorage.getItem('biaOxuUserPermissions')) || {};
+        const bookingPermissions = permissions.quanly_datban || {};
+
+        const canAdd = userRole === 'admin' || bookingPermissions.can_add === true;
+        const canEdit = userRole === 'admin' || bookingPermissions.can_edit === true;
+        const canCancel = userRole === 'admin' || bookingPermissions.can_cancel === true;
+        
+        const addBtn = document.getElementById('addBookingBtn');
+        if (addBtn && !canAdd) {
+            addBtn.style.display = 'none';
+        }
+        // === KẾT THÚC: PHÂN QUYỀN GIAO DIỆN VÀ CHỨC NĂNG ===
+
+        // --- LOGIC RIÊNG CỦA TRANG ---
+        const BOOKINGS_STORAGE_KEY = 'biaOxuBookings';
+        const TABLES_STORAGE_KEY = 'biaOxuTables';
+        const CUSTOMERS_STORAGE_KEY = 'biaOxuCustomers';
+        
+        let bookings = JSON.parse(localStorage.getItem(BOOKINGS_STORAGE_KEY)) || [];
+        let tables = JSON.parse(localStorage.getItem(TABLES_STORAGE_KEY)) || {};
+        let customers = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY)) || [];
+
+        const modal = document.getElementById('bookingModal');
+        const closeButtons = document.querySelectorAll('.close-btn'); // Lấy tất cả các nút đóng
+        const bookingForm = document.getElementById('bookingForm');
+        const startDateFilter = document.getElementById('startDateFilter');
+        const endDateFilter = document.getElementById('endDateFilter');
+        const searchInput = document.getElementById('searchInput');
+
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        function saveData() {
+            localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(bookings));
+        }
+        
+        function renderPaginationControls(totalItems) {
+            const paginationContainer = document.getElementById('pagination-container');
+            paginationContainer.innerHTML = '';
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            if (totalPages <= 1) return;
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-secondary'}`;
+                button.onclick = () => {
+                    currentPage = i;
+                    renderTable();
+                };
+                paginationContainer.appendChild(button);
+            }
+        }
+
+        function renderTable() {
+            const tableBody = document.getElementById('bookingTableBody');
+            tableBody.innerHTML = '';
+            
+            const startDateValue = startDateFilter.value;
+            const endDateValue = endDateFilter.value;
+            const searchQuery = searchInput.value.toLowerCase();
+
+            let filteredBookings = bookings.filter(b => {
+                const bookingDateTime = new Date(b.bookingTime);
+                const startDate = startDateValue ? new Date(startDateValue) : null;
+                if(startDate) startDate.setHours(0, 0, 0, 0);
+                const endDate = endDateValue ? new Date(endDateValue) : null;
+                if(endDate) endDate.setHours(23, 59, 59, 999);
+
+                const matchesDate = (!startDate || bookingDateTime >= startDate) && (!endDate || bookingDateTime <= endDate);
+                const matchesSearch = !searchQuery || 
+                                      b.customerName.toLowerCase().includes(searchQuery) ||
+                                      b.customerPhone.includes(searchQuery);
+                return matchesDate && matchesSearch;
+            })
+            .sort((a, b) => new Date(a.bookingTime) - new Date(b.bookingTime));
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedBookings = filteredBookings.slice(startIndex, endIndex);
+
+            if (paginatedBookings.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Không có lịch đặt nào phù hợp.</td></tr>';
+                renderPaginationControls(0);
+                return;
+            }
+
+            paginatedBookings.forEach(booking => {
+                const bookingDate = new Date(booking.bookingTime);
+                const now = new Date();
+                const isOverdue = booking.status === 'Confirmed' && bookingDate < now;
+                
+                const tableInfo = tables[booking.tableId] ? tables[booking.tableId].name : 'Bàn không xác định';
+                const statusClass = `status-${booking.status.toLowerCase()}`;
+                const statusText = {
+                    Confirmed: 'Đã xác nhận', Completed: 'Đã hoàn thành',
+                    Cancelled: 'Đã hủy', NoShow: 'Không đến'
+                }[booking.status] || booking.status;
+
+                let actions = '';
+                if (booking.status === 'Confirmed') {
+                    actions = `<button class="btn btn-sm btn-success" onclick="checkInBooking('${booking.id}')" ${isOverdue ? 'disabled' : ''}><i class="fa-solid fa-right-to-bracket"></i> Check-in</button>`;
+                    if (canEdit) {
+                         actions += ` <button class="btn btn-sm btn-secondary" onclick="editBooking('${booking.id}')"><i class="fa-solid fa-pen"></i> Sửa</button>`;
+                    }
+                    if (canCancel) {
+                        actions += ` <button class="btn btn-sm btn-warning" onclick="markAsNoShow('${booking.id}')"><i class="fa-solid fa-user-clock"></i> Không đến</button>`;
+                        actions += ` <button class="btn btn-sm btn-danger" onclick="cancelBooking('${booking.id}')"><i class="fa-solid fa-times"></i> Hủy</button>`;
+                    }
+                }
+
+                const row = `
+                    <tr>
+                        <td>${bookingDate.toLocaleString('vi-VN')}</td>
+                        <td>${tableInfo}</td>
+                        <td>${booking.customerName} (${booking.customerPhone})</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                            ${isOverdue ? '<span class="overdue-text">(Quá hạn)</span>' : ''}
+                        </td>
+                        <td class="actions-cell">${actions || '--'}</td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+            
+            renderPaginationControls(filteredBookings.length);
+        }
+
+        window.checkInBooking = (id) => {
+            const booking = bookings.find(b => b.id === id);
+            if (!booking) return;
+            const params = new URLSearchParams({ action: 'checkin', bookingId: id });
+            window.location.href = `quanly_ban.html?${params.toString()}`;
+        };
+        
+        window.editBooking = (id) => {
+            if (!canEdit) {
+                showMessage('Bạn không có quyền sửa lịch đặt.', 'error');
+                return;
+            }
+            const booking = bookings.find(b => b.id === id);
+            if (!booking) return;
+
+            document.getElementById('modalTitle').textContent = 'Chỉnh sửa Lịch Đặt';
+            populateSelectOptions(booking.tableId);
+            document.getElementById('bookingId').value = booking.id;
+            document.getElementById('bookingDateTime').value = booking.bookingTime;
+            document.getElementById('tableId').value = booking.tableId;
+            document.getElementById('customerId').value = booking.customerId;
+            document.getElementById('customerName').value = booking.customerName;
+            document.getElementById('customerPhone').value = booking.customerPhone;
+            document.getElementById('notes').value = booking.notes;
+            modal.style.display = 'flex';
+        };
+
+        const updateTableStatus = (tableId, newStatus) => {
+            let currentTables = JSON.parse(localStorage.getItem(TABLES_STORAGE_KEY)) || {};
+            if (currentTables[tableId]) {
+                currentTables[tableId].status = newStatus;
+                localStorage.setItem(TABLES_STORAGE_KEY, JSON.stringify(currentTables));
+            }
+        };
+
+        window.cancelBooking = (id) => {
+            if (!canCancel) {
+                showMessage('Bạn không có quyền hủy lịch đặt bàn.', 'error');
+                return;
+            }
+            if (confirm('Bạn có muốn hủy lịch đặt này?')) {
+                const booking = bookings.find(b => b.id === id);
+                if (booking) {
+                    booking.status = 'Cancelled';
+                    updateTableStatus(booking.tableId, 'Trống');
+                    saveData();
+                    renderTable();
+                    showMessage('Đã hủy lịch đặt thành công.', 'success');
+                }
+            }
+        };
+
+        window.markAsNoShow = (id) => {
+            if (!canCancel) {
+                showMessage('Bạn không có quyền thực hiện thao tác này.', 'error');
+                return;
+            }
+             if (confirm('Đánh dấu lịch đặt này là "Không đến"?')) {
+                const booking = bookings.find(b => b.id === id);
+                if (booking) {
+                    booking.status = 'NoShow';
+                    updateTableStatus(booking.tableId, 'Trống');
+                    saveData();
+                    renderTable();
+                    showMessage('Đã đánh dấu lịch đặt là "Không đến".', 'warning');
+                }
+            }
+        };
+
+        function populateSelectOptions(currentTableId = null) {
+            const tableSelect = document.getElementById('tableId');
+            tableSelect.innerHTML = '<option value="">-- Chọn bàn --</option>';
+            for(const id in tables) {
+                if (tables[id].status === 'Trống' || id === currentTableId) {
+                    tableSelect.innerHTML += `<option value="${id}">${tables[id].name}</option>`;
+                }
+            }
+            const customerSelect = document.getElementById('customerId');
+            customerSelect.innerHTML = '<option value="">-- Khách vãng lai --</option>';
+            customers.forEach(c => {
+                customerSelect.innerHTML += `<option value="${c.id}">${c.name} - ${c.phone}</option>`;
+            });
+        }
+
+        document.getElementById('customerId').addEventListener('change', (e) => {
+            const selectedId = e.target.value;
+            const customer = customers.find(c => c.id === selectedId);
+            const saveCustomerContainer = document.getElementById('saveNewCustomerContainer');
+            if(customer) {
+                document.getElementById('customerName').value = customer.name;
+                document.getElementById('customerPhone').value = customer.phone;
+                saveCustomerContainer.style.display = 'none';
+                document.getElementById('saveNewCustomer').checked = false;
+            } else {
+                document.getElementById('customerName').value = '';
+                document.getElementById('customerPhone').value = '';
+                saveCustomerContainer.style.display = 'block';
+            }
+        });
+        
+        addBtn.onclick = () => {
+            if (!canAdd) {
+                showMessage('Bạn không có quyền tạo lịch đặt bàn.', 'error');
+                return;
+            }
+            document.getElementById('modalTitle').textContent = 'Tạo Lịch Đặt Bàn';
+            populateSelectOptions();
+            bookingForm.reset();
+            document.getElementById('bookingId').value = '';
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('bookingDateTime').min = now.toISOString().slice(0, 16);
+            document.getElementById('saveNewCustomerContainer').style.display = 'block';
+            modal.style.display = 'flex';
+        };
+
+        closeButtons.forEach(btn => {
+            btn.onclick = () => modal.style.display = 'none';
+        });
+
+        window.onclick = (event) => {
+            if (event.target == modal) modal.style.display = 'none';
+        };
+        
+        function handleFilterChange() {
+            currentPage = 1;
+            renderTable();
+        }
+
+        startDateFilter.addEventListener('change', handleFilterChange);
+        endDateFilter.addEventListener('change', handleFilterChange);
+        searchInput.addEventListener('input', handleFilterChange);
+
+        function checkForConflict(tableId, dateTime, bookingIdToIgnore = null) {
+            const newBookingTime = new Date(dateTime).getTime();
+            const conflictWindow = 2 * 60 * 60 * 1000;
+            for (const booking of bookings) {
+                if (booking.id === bookingIdToIgnore || booking.tableId !== tableId || booking.status === 'Cancelled' || booking.status === 'NoShow') continue;
+                const existingBookingTime = new Date(booking.bookingTime).getTime();
+                if (Math.abs(newBookingTime - existingBookingTime) < conflictWindow) {
+                    return `Bàn này đã có lịch đặt khác vào lúc ${new Date(existingBookingTime).toLocaleString('vi-VN')}. Vui lòng kiểm tra lại.`;
+                }
+            }
+            return null;
+        }
+
+        bookingForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const bookingId = document.getElementById('bookingId').value;
+            if (bookingId && !canEdit) {
+                showMessage('Bạn không có quyền sửa lịch đặt.', 'error');
+                return;
+            }
+            if (!bookingId && !canAdd) {
+                showMessage('Bạn không có quyền tạo lịch đặt.', 'error');
+                return;
+            }
+
+            const selectedTableId = document.getElementById('tableId').value;
+            const bookingDateTimeValue = document.getElementById('bookingDateTime').value;
+            
+            const conflictMessage = checkForConflict(selectedTableId, bookingDateTimeValue, bookingId);
+            if (conflictMessage) {
+                showMessage(conflictMessage, 'error');
+                return;
+            }
+            
+            const customerName = document.getElementById('customerName').value;
+            const customerPhone = document.getElementById('customerPhone').value;
+
+            if (bookingId) {
+                const booking = bookings.find(b => b.id === bookingId);
+                if (booking) {
+                    const oldTableId = booking.tableId;
+                    if(oldTableId !== selectedTableId) updateTableStatus(oldTableId, 'Trống');
+                    booking.bookingTime = bookingDateTimeValue;
+                    booking.tableId = selectedTableId;
+                    booking.customerId = document.getElementById('customerId').value;
+                    booking.customerName = customerName;
+                    booking.customerPhone = customerPhone;
+                    booking.notes = document.getElementById('notes').value;
+                }
+            } else {
+                 const newBooking = {
+                    id: `BK-${Date.now()}`, bookingTime: bookingDateTimeValue, tableId: selectedTableId,
+                    customerId: document.getElementById('customerId').value, customerName: customerName,
+                    customerPhone: customerPhone, notes: document.getElementById('notes').value, status: 'Confirmed'
+                };
+                bookings.push(newBooking);
+
+                if (document.getElementById('saveNewCustomer').checked) {
+                    const isExisting = customers.some(c => c.phone === customerPhone);
+                    if (!isExisting) {
+                        let currentCustomers = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY)) || [];
+                        const newCustomer = {
+                            id: `KH-${Date.now()}`, name: customerName, phone: customerPhone,
+                            membershipLevel: 'Thường', notes: '', totalSpent: 0, visitCount: 0
+                        };
+                        currentCustomers.push(newCustomer);
+                        localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(currentCustomers));
+                        customers = currentCustomers;
+                    }
+                }
+            }
+            
+            saveData(); 
+            updateTableStatus(selectedTableId, 'Đã đặt');
+            
+            startDateFilter.value = bookingDateTimeValue.split('T')[0];
+            endDateFilter.value = bookingDateTimeValue.split('T')[0];
+            updateActiveButton(null);
+            handleFilterChange();
+            modal.style.display = 'none';
+
+            showMessage(bookingId ? 'Cập nhật lịch đặt thành công!' : 'Tạo lịch đặt mới thành công!', 'success');
+        });
+
+        const presetButtons = document.querySelectorAll('#date-presets button');
+        function updateActiveButton(activeButton) {
+            presetButtons.forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+            if(activeButton) {
+                activeButton.classList.add('btn-primary');
+                activeButton.classList.remove('btn-secondary');
+            }
+        }
+        
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        document.getElementById('todayBtn').addEventListener('click', (e) => {
+            const today = new Date();
+            startDateFilter.value = formatDate(today);
+            endDateFilter.value = formatDate(today);
+            updateActiveButton(e.target);
+            handleFilterChange();
+        });
+
+        document.getElementById('yesterdayBtn').addEventListener('click', (e) => {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            startDateFilter.value = formatDate(yesterday);
+            endDateFilter.value = formatDate(yesterday);
+            updateActiveButton(e.target);
+            handleFilterChange();
+        });
+
+        document.getElementById('last7DaysBtn').addEventListener('click', (e) => {
+            const today = new Date();
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+            startDateFilter.value = formatDate(sevenDaysAgo);
+            endDateFilter.value = formatDate(today);
+            updateActiveButton(e.target);
+            handleFilterChange();
+        });
+
+        document.getElementById('thisMonthBtn').addEventListener('click', (e) => {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            startDateFilter.value = formatDate(firstDay);
+            endDateFilter.value = formatDate(lastDay);
+            updateActiveButton(e.target);
+            handleFilterChange();
+        });
+        
+        startDateFilter.addEventListener('input', () => updateActiveButton(null));
+        endDateFilter.addEventListener('input', () => updateActiveButton(null));
+
+        document.getElementById('todayBtn').click();
+    });
+</script>
+</body>
+</html>

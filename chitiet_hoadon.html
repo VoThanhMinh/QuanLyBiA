@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết Hóa đơn - BI-A OXU</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // Kiểm tra trạng thái đăng nhập
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    
+    <style>
+        /* ===================== FONT AND COLOR VARIABLES ===================== */
+        :root {
+            --primary-color: #0d47a1;
+            --secondary-color: #1976d2;
+            --text-color: #333;
+            --light-text-color: #f0f4f8;
+            --background-color: #eef2f6;
+            --card-background: #ffffff;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-dark: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ===================== GLOBAL STYLES ===================== */
+        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; }
+        .app-container { min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* ===================== HEADER ===================== */
+        .main-header {
+            background-color: var(--card-background);
+            box-shadow: var(--shadow-light);
+            height: 70px;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .main-header .app-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .main-header .app-name i {
+            color: var(--secondary-color);
+        }
+
+        .main-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-nav li {
+            position: relative;
+            margin: 0 5px;
+        }
+
+        .main-nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .main-nav a i {
+            font-size: 18px;
+            color: var(--secondary-color);
+        }
+
+        .main-nav a:hover,
+        .main-nav li.active a {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .main-nav li.active a i {
+            color: var(--primary-color);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: var(--shadow-dark);
+            min-width: 220px;
+            z-index: 99;
+            list-style: none;
+            padding: 10px 0;
+            margin-top: 10px;
+            transform: translateY(10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .has-dropdown:hover .dropdown-menu {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dropdown-menu a {
+            padding: 12px 20px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-color);
+            border-radius: 0;
+            font-size: 14px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .dropdown-menu a i {
+            font-size: 16px;
+            color: var(--secondary-color);
+        }
+
+        /* ===================== MAIN CONTENT ===================== */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .bill-detail-container { width: 100%; max-width: 600px; background-color: var(--card-background); padding: 30px; border-radius: 12px; box-shadow: var(--shadow-light); }
+        .bill-detail-header { text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 15px; margin-bottom: 20px; }
+        .bill-detail-header h1 { color: var(--primary-color); font-size: 28px; margin: 0; }
+        .bill-detail-header p { color: #666; font-size: 14px; margin: 5px 0 0; }
+        .bill-info { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .bill-info-row { display: flex; justify-content: space-between; font-size: 16px; }
+        .bill-info-row span:first-child { font-weight: 600; color: #555; }
+        .bill-items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .bill-items-table th, .bill-items-table td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+        .bill-items-table th { background-color: var(--background-color); color: var(--primary-color); font-weight: 600; padding: 12px 10px; }
+        .bill-items-table .item-total { text-align: right; }
+        .bill-summary { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; }
+        .bill-summary p { display: flex; justify-content: space-between; margin: 5px 0; font-size: 16px; }
+        .bill-summary p.total { font-size: 20px; font-weight: 700; color: var(--primary-color); border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;}
+        #message { color: #888; text-align: center; margin-top: 40px; }
+
+        /* ===================== FOOTER ===================== */
+        .main-footer {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 20px 30px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer-info, .user-info {
+            display: flex;
+            gap: 25px;
+        }
+
+        .main-footer i {
+            color: var(--light-text-color);
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="main-header">
+            <a href="index.html" style="text-decoration: none;">
+                <h1 class="app-name"><i class="fa-solid fa-gem"></i> BI-A OXU</h1>
+            </a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html"><i class="fa-solid fa-chart-line"></i> Trang chủ</a></li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-boxes-stacked"></i> Quản lý</a>
+                        <ul class="dropdown-menu">
+    <li><a href="quanly_ban.html"><i class="fa-solid fa-table-tennis-paddle-ball"></i> Quản lý bàn</a></li>
+    <li><a href="quanly_khachhang.html"><i class="fa-solid fa-address-book"></i> Quản lý Khách hàng</a></li>
+    <li><a href="quanly_datban.html"><i class="fa-solid fa-calendar-check"></i> Quản lý Đặt bàn</a></li>
+    <li><a href="quanly_thuchi.html"><i class="fa-solid fa-cash-register"></i> Quản lý thu chi</a></li>
+    <li><a href="quanly_kho.html"><i class="fa-solid fa-box-open"></i> Quản lý kho</a></li>
+    <li><a href="quanly_nhanvien.html"><i class="fa-solid fa-users"></i> Quản lý nhân viên</a></li>
+</ul>
+                    </li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-chart-pie"></i> Báo cáo</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="baocao_doanhthu.html"><i class="fa-solid fa-file-invoice"></i> Doanh thu ngày</a></li>
+                            <li><a href="baocao_thongke.html"><i class="fa-solid fa-chart-bar"></i> Thống kê tuần</a></li>
+                            <li><a href="baocao_loinhuan.html"><i class="fa-solid fa-file-contract"></i> Báo cáo nhân viên</a></li>
+                             <li><a href="baocao_khachhang.html"><i class="fa-solid fa-user-tag"></i> Phân tích Khách hàng</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="cai_dat.html"><i class="fa-solid fa-gear"></i> Cài đặt</a></li>
+                    <li><a href="tro_giup.html"><i class="fa-solid fa-circle-question"></i> Trợ giúp</a></li>
+                    <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <div class="main-content">
+            <div id="bill-detail-content" class="bill-detail-container">
+                <p id="message">Đang tải chi tiết hóa đơn...</p>
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <div class="footer-info">
+                <span class="copyright-info"><i class="fa-solid fa-copyright"></i> 2025 BI-A OXU. All rights reserved.</span>
+                <span class="phone-info"><i class="fa-solid fa-phone"></i> Hotline: </span>
+            </div>
+            <div class="user-info">
+    <span id="footer-username"><i class="fa-solid fa-user"></i> Người dùng: </span>
+    <span><i class="fa-solid fa-circle-check"></i> Trạng thái: OK</span>
+</div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Lấy tên người dùng từ sessionStorage
+            const loggedInUser = sessionStorage.getItem('loggedInUser');
+            if (loggedInUser) {
+                const usernameElement = document.getElementById('footer-username');
+                if (usernameElement) {
+                    usernameElement.innerHTML = `<i class="fa-solid fa-user"></i> Người dùng: ${loggedInUser}`;
+                }
+            }
+    
+            const SAVED_BILLS_STORAGE_KEY = 'biaOxuSavedBills';
+            const billDetailContent = document.getElementById('bill-detail-content');
+            const messageElement = document.getElementById('message');
+    
+            // TÌM VÀ THAY THẾ TOÀN BỘ HÀM NÀY
+
+function formatCurrency(amount) {
+    // Chỉ làm tròn đến đơn vị đồng gần nhất, không làm tròn hàng nghìn
+    const exactAmount = Math.round(amount || 0);
+    return new Intl.NumberFormat('vi-VN').format(exactAmount);
+}
+    
+            function getPlayingTime(startTime, endTime) {
+                const elapsedMilliseconds = endTime - startTime;
+                if (isNaN(elapsedMilliseconds) || elapsedMilliseconds < 0) return '00:00:00';
+                const totalSeconds = Math.floor(elapsedMilliseconds / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+    
+            // Cập nhật thông tin quán từ cài đặt
+            function updateStoreInfo() {
+                const savedData = localStorage.getItem('general-form');
+                if (savedData) {
+                    try {
+                        const settings = JSON.parse(savedData);
+                        const storeNameElement = document.querySelector('.main-header .app-name');
+                        if (storeNameElement && settings['store-name']) {
+                            storeNameElement.innerHTML = `<i class="fa-solid fa-gem"></i> ${settings['store-name']}`;
+                        }
+                        const phoneElement = document.querySelector('.main-footer .phone-info');
+                        if (phoneElement && settings.phone) {
+                            phoneElement.innerHTML = `<i class="fa-solid fa-phone"></i> Hotline: ${settings.phone}`;
+                        }
+                        const copyrightElement = document.querySelector('.main-footer .copyright-info');
+                        if (copyrightElement && settings['store-name']) {
+                            copyrightElement.innerHTML = `<i class="fa-solid fa-copyright"></i> 2025 ${settings['store-name']}. All rights reserved.`;
+                        }
+                    } catch(e) { console.error("Lỗi cập nhật thông tin quán:", e); }
+                }
+            }
+            updateStoreInfo();
+    
+            // Lấy mã hóa đơn từ URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const billId = urlParams.get('id');
+    
+            if (billId) {
+                const storedSavedBills = localStorage.getItem(SAVED_BILLS_STORAGE_KEY);
+                if (storedSavedBills) {
+                    const savedBills = JSON.parse(storedSavedBills);
+                    const bill = savedBills.find(b => b.id === billId);
+    
+                    if (bill) {
+                        messageElement.style.display = 'none';
+    
+                        // 1. Xây dựng danh sách sản phẩm
+                        const productsList = bill.products.map(p => `
+                            <tr>
+                                <td>${p.name}</td>
+                                <td>${p.quantity}</td>
+                                <td style="text-align: right;">${formatCurrency(p.price)}</td>
+                                <td class="item-total">${formatCurrency(p.price * p.quantity)}</td>
+                            </tr>`).join('');
+                        
+                        // 2. Xây dựng danh sách giảm trừ / phụ thu
+                        let adjustmentsListHTML = '';
+                        if (bill.adjustmentDetails && bill.adjustmentDetails.length > 0) {
+                            adjustmentsListHTML = bill.adjustmentDetails.map(adj => {
+                                const amountColor = adj.calculatedAmount < 0 ? '#d32f2f' : '#388e3c';
+                                let detailText = adj.description;
+                                if (adj.method === 'percentage') {
+                                    detailText += ` (${adj.value}%)`;
+                                }
+                                return `<p class="bill-info-row">
+                                            <span>${detailText}</span>
+                                            <span style="font-weight: 600; color: ${amountColor};">${formatCurrency(adj.calculatedAmount)}đ</span>
+                                        </p>`;
+                            }).join('');
+                        } else {
+                            adjustmentsListHTML = '<p style="color: #888; font-size: 14px; text-align: center;">Không có</p>';
+                        }
+    
+                        // 3. Tính tổng các khoản điều chỉnh
+                        const adjustmentsTotal = (bill.adjustmentDetails || []).reduce((sum, adj) => sum + adj.calculatedAmount, 0);
+    
+                        // 4. Render toàn bộ nội dung hóa đơn
+                        billDetailContent.innerHTML = `
+                            <div class="bill-detail-header">
+                                <h1>CHI TIẾT HÓA ĐƠN</h1>
+                                <p>Ngày thanh toán: ${new Date(bill.endTime).toLocaleString('vi-VN')}</p>
+                            </div>
+                            
+                            <div class="bill-info">
+                                <div class="bill-info-row"><span>Mã hóa đơn:</span><span>${bill.id}</span></div>
+                                <div class="bill-info-row"><span>Bàn:</span><span>${bill.tableName}</span></div>
+                                <div class="bill-info-row"><span>Thời gian chơi:</span><span>${getPlayingTime(bill.startTime, bill.endTime)}</span></div>
+                            </div>
+    
+                            <h4 style="color: var(--primary-color); margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Dịch vụ đã sử dụng</h4>
+                            <table class="bill-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Món</th>
+                                        <th>SL</th>
+                                        <th style="text-align: right;">Đơn giá</th>
+                                        <th class="item-total">Tổng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Tiền giờ</td>
+                                        <td>-</td>
+                                        <td style="text-align: right;">-</td>
+                                        <td class="item-total">${formatCurrency(bill.playingCost)}</td>
+                                    </tr>
+                                    ${productsList}
+                                </tbody>
+                            </table>
+    
+                            <h4 style="color: var(--primary-color); margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Giảm trừ / Phụ thu</h4>
+                            <div class="bill-info" style="gap: 5px;">
+                                ${adjustmentsListHTML}
+                            </div>
+    
+                            <div class="bill-summary">
+                                <p><span>Tiền giờ (trước điều chỉnh):</span><span>${formatCurrency(bill.playingCost)}đ</span></p>
+                                <p><span>Tiền dịch vụ:</span><span>${formatCurrency(bill.productsCost)}đ</span></p>
+                                ${adjustmentsTotal !== 0 ? `
+                                    <p>
+                                        <span>Tổng Giảm trừ/Phụ thu:</span>
+                                        <span style="font-weight: 600; color: ${adjustmentsTotal < 0 ? '#d32f2f' : '#388e3c'};">
+                                            ${formatCurrency(adjustmentsTotal)}đ
+                                        </span>
+                                    </p>` : ''}
+                                <p class="total"><span>TỔNG CỘNG:</span><span>${formatCurrency(bill.totalAmount)}đ</span></p>
+                            </div>
+                        `;
+                    } else {
+                        billDetailContent.innerHTML = `<p id="message">Không tìm thấy hóa đơn này.</p>`;
+                    }
+                } else {
+                    billDetailContent.innerHTML = `<p id="message">Không có hóa đơn nào được lưu.</p>`;
+                }
+            } else {
+                billDetailContent.innerHTML = `<p id="message">Vui lòng chọn một hóa đơn để xem.</p>`;
+            }
+    
+            // Logic nút đăng xuất
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    sessionStorage.clear();
+                    window.location.href = 'login.html';
+                });
+            }
+        });
+    </script>    
+</body>
+</html>

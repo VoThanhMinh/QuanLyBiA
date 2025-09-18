@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Kho - PHẦN MỀM QUẢN LÝ QUÁN BI-A</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+   <script>
+        // Nếu trong sessionStorage không có mục 'isLoggedIn' với giá trị 'true'
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            // Lập tức chuyển hướng người dùng về trang đăng nhập
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <style>
+        /* ===================== FONT AND COLOR VARIABLES ===================== */
+        :root {
+            --primary-color: #0d47a1;
+            --secondary-color: #1976d2;
+            --text-color: #333;
+            --light-text-color: #f0f4f8;
+            --background-color: #eef2f6;
+            --card-background: #ffffff;
+            --shadow-light: 0 6px 16px rgba(0, 0, 0, 0.08);
+            --shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --success-color: #4CAF50;
+            --danger-color: #EF5350;
+            /* === YÊU CẦU 2: THÊM MÀU NÂU CHO NÚT LỊCH SỬ === */
+            --brown-color: #8D6E63;
+            --brown-dark-color: #6D4C41;
+            /* === KẾT THÚC YÊU CẦU 2 === */
+        }
+
+        /* ===================== GLOBAL STYLES ===================== */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden; /* NGĂN THANH CUỘN NGANG */
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* === START SYNC: BỐ CỤC GIỐNG QUANLY_BAN === */
+        .content-wrapper {
+            flex: 1;
+            overflow: hidden;
+            padding: 20px;
+            padding-top: 90px; /* Giữ khoảng cách với header */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex; /* Bật Flexbox để chứa main-panel và history-panel */
+            transition: gap 0.35s ease-in-out;
+        }
+
+        .main-content.sidebar-active {
+            gap: 20px; /* Tạo khoảng cách khi sidebar hiện */
+        }
+        /* === END SYNC === */
+
+        .main-panel {
+            flex-grow: 1;
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        h3 {
+             color: var(--primary-color);
+             margin-top: 40px;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid #e0e0e0;
+            margin: 20px 0;
+        }
+        
+        /* ===================== NEW: TAB NAVIGATION STYLES ===================== */
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab-nav button {
+            background-color: transparent;
+            border: none;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #999;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-nav button.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .tab-nav button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===================== TABLE STYLES ===================== */
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .inventory-table caption {
+            font-size: 1.2em;
+            margin: 10px 0;
+            font-weight: 600;
+            color: var(--primary-color);
+            caption-side: top;
+            text-align: left;
+        }
+
+        .inventory-table th, .inventory-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .inventory-table th {
+            background-color: var(--background-color);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .inventory-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .inventory-table img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .inventory-table .actions button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .inventory-table .actions .edit-btn {
+            color: var(--secondary-color);
+        }
+
+        .inventory-table .actions .delete-btn {
+            color: #ef5350;
+        }
+
+        .inventory-table .actions button:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+        
+        .inventory-table tr.low-stock {
+            background-color: #ffebee !important; /* Màu đỏ nhạt */
+            font-weight: 600;
+        }
+
+        .inventory-table tr.low-stock td:first-child {
+            border-left: 4px solid #ef5350; /* Thêm một đường kẻ đỏ bên trái */
+        }
+        
+        .inventory-table .out-of-stock {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        /* ===================== HEADER & FOOTER ===================== */
+        .main-header {
+            background-color: var(--card-background);
+            box-shadow: var(--shadow-light);
+            height: 70px;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            position: fixed; /* Cố định header */
+            width: 100%;
+            top: 0;
+        }
+
+        .main-header .app-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .main-header .app-name i {
+            color: var(--secondary-color);
+        }
+
+        .main-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-nav li {
+            position: relative;
+            margin: 0 5px;
+        }
+
+        .main-nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .main-nav a i {
+            font-size: 18px;
+            color: var(--secondary-color);
+        }
+
+        .main-nav a:hover,
+        .main-nav li.active a {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .main-nav li.active a i {
+            color: var(--primary-color);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: var(--shadow-dark);
+            min-width: 220px;
+            z-index: 99;
+            list-style: none;
+            padding: 10px 0;
+            margin-top: 10px;
+            transform: translateY(10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .has-dropdown:hover .dropdown-menu {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dropdown-menu a {
+            padding: 12px 20px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-color);
+            border-radius: 0;
+            font-size: 14px;
+        }
+
+        .dropdown-menu a:hover,
+        .dropdown-menu a.active {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .dropdown-menu a i {
+            font-size: 16px;
+            color: var(--secondary-color);
+        }
+
+        .dropdown-menu a.active i {
+            color: var(--primary-color);
+        }
+
+        .main-footer {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 20px 30px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer-info, .user-info {
+            display: flex;
+            gap: 25px;
+        }
+
+        .main-footer i {
+            color: var(--light-text-color);
+            margin-right: 5px;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .message-box.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ===================== MODAL STYLES ===================== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            padding-top: 60px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal.active {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow-dark);
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #555;
+            text-decoration: none;
+        }
+
+        .modal .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .modal label {
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .modal input, .modal select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .modal input:focus, .modal select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.2);
+        }
+
+        .modal .btn-save {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal .btn-save:hover {
+            background-color: #45a049;
+        }
+
+        .controls-top {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .controls-top .btn {
+            color: var(--light-text-color);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn.btn-primary {
+             background-color: var(--secondary-color);
+        }
+        .btn.btn-primary:hover {
+            background-color: #1565c0;
+        }
+        .btn.btn-success {
+            background-color: var(--success-color);
+        }
+        .btn.btn-success:hover {
+            background-color: #45a049;
+        }
+
+        /* === YÊU CẦU 2: THÊM STYLE CHO NÚT MÀU NÂU === */
+        .btn.btn-history {
+            background-color: var(--brown-color);
+        }
+        .btn.btn-history:hover {
+            background-color: var(--brown-dark-color);
+        }
+        /* === KẾT THÚC YÊU CẦU 2 === */
+        
+        /* ===================== START SYNC: HISTORY PANEL STYLES (SIDEBAR) ===================== */
+        .history-panel {
+            width: 0;
+            min-width: 0;
+            background-color: var(--card-background);
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.15);
+            padding: 0;
+            overflow: hidden;
+            opacity: 0;
+            white-space: nowrap;
+            transition: all 0.35s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .main-content.sidebar-active .history-panel {
+            width: 350px;
+            min-width: 350px;
+            padding: 20px;
+            opacity: 1;
+        }
+        
+        .history-panel h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        /* ===================== END SYNC: HISTORY PANEL STYLES (SIDEBAR) ===================== */
+        
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-icon {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--light-text-color);
+            font-size: 14px;
+        }
+        
+        .history-icon.add { background-color: #4CAF50; }
+        .history-icon.edit { background-color: #1976D2; }
+        .history-icon.delete { background-color: #EF5350; }
+        
+        .history-details {
+            flex-grow: 1;
+        }
+        
+        .history-details p {
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .history-details .item-name {
+            font-weight: 600;
+        }
+        
+        .history-details .timestamp {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        // *** KIỂM TRA QUYỀN TRUY CẬP TRANG ***
+        (function() {
+            const PAGE_FEATURE_ID = 'quanly_kho';
+            const userRole = sessionStorage.getItem('userRole');
+            
+            if (userRole === 'user') {
+                const permissions = JSON.parse(localStorage.getItem('biaOxuUserPermissions')) || {};
+                const hasPermission = permissions[PAGE_FEATURE_ID] && permissions[PAGE_FEATURE_ID].access === true;
+
+                if (!hasPermission) {
+                    document.body.style.display = 'none';
+                    alert('Bạn không có quyền truy cập chức năng này.');
+                    window.location.href = 'index.html';
+                }
+            }
+        })();
+    </script>
+
+    <div class="app-container">
+        <header class="main-header">
+            <a href="index.html" style="text-decoration: none;">
+                <h1 class="app-name"><i class="fa-solid fa-gem"></i> BI-A OXU</h1>
+            </a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html"><i class="fa-solid fa-chart-line"></i> Trang chủ</a></li>
+                    <li class="has-dropdown active">
+                        <a href="#"><i class="fa-solid fa-boxes-stacked"></i> Quản lý</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="quanly_ban.html"><i class="fa-solid fa-table-tennis-paddle-ball"></i> Quản lý bàn</a></li>
+                            <li><a href="quanly_khachhang.html"><i class="fa-solid fa-address-book"></i> Quản lý Khách hàng</a></li>
+                            <li><a href="quanly_datban.html"><i class="fa-solid fa-calendar-check"></i> Quản lý Đặt bàn</a></li>
+                            <li><a href="quanly_thuchi.html"><i class="fa-solid fa-cash-register"></i> Quản lý thu chi</a></li>
+                            <li><a href="quanly_kho.html"><i class="fa-solid fa-box-open"></i> Quản lý kho</a></li>
+                            <li><a href="quanly_nhanvien.html"><i class="fa-solid fa-users"></i> Quản lý nhân viên</a></li>
+                        </ul>
+                    </li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-chart-pie"></i> Báo cáo</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="baocao_doanhthu.html"><i class="fa-solid fa-file-invoice"></i> Doanh thu ngày</a></li>
+                            <li><a href="baocao_thongke.html"><i class="fa-solid fa-chart-bar"></i> Thống kê tuần</a></li>
+                            <li><a href="baocao_loinhuan.html"><i class="fa-solid fa-file-contract"></i> Báo cáo nhân viên</a></li>
+                             <li><a href="baocao_khachhang.html"><i class="fa-solid fa-user-tag"></i> Phân tích Khách hàng</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="cai_dat.html"><i class="fa-solid fa-gear"></i> Cài đặt</a></li>
+                    <li><a href="tro_giup.html"><i class="fa-solid fa-circle-question"></i> Trợ giúp</a></li>
+                    <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <div class="content-wrapper">
+            <main class="main-content">
+                <div class="main-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2>Quản lý Kho / Thực đơn</h2>
+                        <div class="controls-top">
+                             <button id="add-item-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới</button>
+                             <button id="stock-in-btn" class="btn btn-success"><i class="fa-solid fa-truck-ramp-box"></i> Nhập Kho</button>
+                             <button id="toggle-history-btn" class="btn btn-history"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử thao tác</button>
+                        </div>
+                    </div>
+                    <p>Quản lý các mặt hàng, tồn kho và lịch sử nhập hàng.</p>
+                    <hr>
+
+                    <div class="tab-nav">
+                        <button class="tab-btn active" data-tab="items-tab">
+                            <i class="fa-solid fa-boxes-stacked"></i> Danh sách mặt hàng
+                        </button>
+                        <button class="tab-btn" data-tab="history-tab">
+                            <i class="fa-solid fa-file-invoice"></i> Lịch sử nhập kho
+                        </button>
+                    </div>
+
+                    <div id="items-tab" class="tab-content active">
+                        <div class="inventory-list">
+                            <table class="inventory-table">
+                                <caption>Danh sách các mặt hàng trong kho</caption>
+                                <thead>
+                                    <tr>
+                                        <th>Hình ảnh</th>
+                                        <th>Tên mặt hàng</th>
+                                        <th>Giá bán</th>
+                                        <th>Tồn kho</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventory-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="history-tab" class="tab-content">
+                        <div class="stock-in-history">
+                             <table class="inventory-table">
+                                <caption>Lịch sử các lần nhập kho</caption>
+                                <thead>
+                                    <tr>
+                                        <th>Ngày nhập</th>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Số lượng</th>
+                                        <th>Giá vốn</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stock-in-history-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <aside id="history-panel" class="history-panel">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử thao tác</h3>
+                    <ul class="history-list" id="history-list-body">
+                    </ul>
+                </aside>
+                </main>
+        </div>
+
+        <div id="message-box" class="message-box"></div>
+
+        <footer class="main-footer">
+            <div class="footer-info">
+                <span class="copyright-info"><i class="fa-solid fa-copyright"></i> 2025 BI-A OXU. All rights reserved.</span>
+                <span class="phone-info"><i class="fa-solid fa-phone"></i> Hotline: 0902.022.665</span>
+            </div>
+            <div class="user-info">
+                <span id="footer-username"><i class="fa-solid fa-user"></i> Người dùng: </span>
+                <span><i class="fa-solid fa-circle-check"></i> Trạng thái: OK</span>
+            </div>
+        </footer>
+    </div>
+    
+    <div id="item-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Thêm Sản Phẩm Mới</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form id="item-form">
+                <input type="hidden" id="item-id">
+                <div class="form-group">
+                    <label for="modal-item-name">Tên sản phẩm</label>
+                    <input type="text" id="modal-item-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal-item-price">Giá bán (VNĐ)</label>
+                    <input type="number" id="modal-item-price" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="modal-item-image">URL Hình ảnh</label>
+                    <input type="text" id="modal-item-image">
+                </div>
+                <button type="submit" class="btn-save" id="modal-save-btn">Lưu</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="stock-in-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                 <h3 id="stock-in-modal-title">Phiếu Nhập Kho</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form id="stock-in-form">
+                 <input type="hidden" id="stock-in-history-id">
+                <div class="form-group">
+                    <label for="stock-in-product-select">Chọn sản phẩm</label>
+                    <select id="stock-in-product-select" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="stock-in-quantity">Số lượng nhập</label>
+                    <input type="number" id="stock-in-quantity" required min="1">
+                </div>
+                <div class="form-group">
+                    <label for="stock-in-cost">Giá vốn / đơn vị (VNĐ)</label>
+                    <input type="number" id="stock-in-cost" required min="0">
+                </div>
+                 <button type="submit" class="btn-save" id="stock-in-save-btn">Xác nhận Nhập Kho</button>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loggedInUser = sessionStorage.getItem('loggedInUser');
+            if (loggedInUser) {
+                const usernameElement = document.getElementById('footer-username');
+                if (usernameElement) {
+                    usernameElement.innerHTML = `<i class="fa-solid fa-user"></i> Người dùng: ${loggedInUser}`;
+                }
+            }
+            // =================================================================
+            // ===== BẮT ĐẦU: PHÂN QUYỀN GIAO DIỆN VÀ CHỨC NĂNG (ĐÃ HOÀN THIỆN) ====
+            // =================================================================
+            const userRole = sessionStorage.getItem('userRole');
+            const permissions = JSON.parse(localStorage.getItem('biaOxuUserPermissions')) || {};
+            const khoPermissions = (permissions.quanly_kho || {});
+
+            // Lấy tất cả các quyền cần thiết từ localStorage
+            const canAdd = userRole === 'admin' || khoPermissions.can_add === true;
+            const canEdit = userRole === 'admin' || khoPermissions.can_edit === true;
+            const canDelete = userRole === 'admin' || khoPermissions.can_delete === true;
+            const canAddKho = userRole === 'admin' || khoPermissions.can_add_kho === true;
+            const viewTabKho = userRole === 'admin' || khoPermissions.view_tab_kho === true;
+
+            // 1. Ẩn nút "Thêm Sản Phẩm" nếu không có quyền
+            const addItemBtn = document.getElementById('add-item-btn');
+            if (addItemBtn && !canAdd) {
+                addItemBtn.style.display = 'none';
+            }
+            
+            // 2. Ẩn nút "Nhập Kho" nếu không có quyền
+            const stockInBtn = document.getElementById('stock-in-btn');
+            if (stockInBtn && !canAddKho) {
+                stockInBtn.style.display = 'none';
+            }
+
+            // 3. Ẩn tab "Lịch sử nhập kho" nếu không có quyền
+            const historyTabBtn = document.querySelector('.tab-btn[data-tab="history-tab"]');
+            if (historyTabBtn && !viewTabKho) {
+                historyTabBtn.style.display = 'none';
+            }
+            // ===============================================================
+            // ===== KẾT THÚC: PHÂN QUYỀN GIAO DIỆN VÀ CHỨC NĂNG =============
+            // ===============================================================
+
+            // STORAGE KEYS
+            const INVENTORY_STORAGE_KEY = 'biaOxuMenuItems';
+            const CRUD_HISTORY_STORAGE_KEY = 'biaOxuCrudHistory';
+            const STOCK_IN_HISTORY_KEY = 'biaOxuStockInHistory';
+            const TRANSACTIONS_STORAGE_KEY = 'biaOxuTransactions';
+
+
+            let inventory = [];
+            let crudHistory = [];
+            let stockInHistory = [];
+            
+            let isEditing = false;
+            let currentEditId = null;
+            let isEditingStockIn = false;
+            let currentEditStockInId = null;
+
+
+            // DOM Elements
+            const messageBox = document.getElementById('message-box');
+            
+            // Item Modal Elements
+            const itemModal = document.getElementById('item-modal');
+            const itemModalTitle = document.getElementById('modal-title');
+            const itemForm = document.getElementById('item-form');
+            const modalItemNameInput = document.getElementById('modal-item-name');
+            const modalItemPriceInput = document.getElementById('modal-item-price');
+            const modalItemImageInput = document.getElementById('modal-item-image');
+            const modalSaveBtn = document.getElementById('modal-save-btn');
+            
+            // Stock-in Modal Elements
+            const stockInModal = document.getElementById('stock-in-modal');
+            const stockInForm = document.getElementById('stock-in-form');
+            const stockInProductSelect = document.getElementById('stock-in-product-select');
+            const stockInQuantityInput = document.getElementById('stock-in-quantity');
+            const stockInCostInput = document.getElementById('stock-in-cost');
+            const stockInModalTitle = document.getElementById('stock-in-modal-title');
+            const stockInSaveBtn = document.getElementById('stock-in-save-btn');
+
+            
+            // History Elements
+            const historyListBody = document.getElementById('history-list-body');
+            const toggleHistoryBtn = document.getElementById('toggle-history-btn');
+            const historyPanel = document.getElementById('history-panel');
+            
+            // Table Body Elements
+            const inventoryTableBody = document.getElementById('inventory-table-body');
+            const stockInHistoryTableBody = document.getElementById('stock-in-history-table-body');
+
+            // START SYNC: Get reference to main-content
+            const mainContent = document.querySelector('.main-content');
+            // END SYNC
+            
+            // TAB SWITCHING LOGIC
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    button.classList.add('active');
+                    document.getElementById(button.dataset.tab).classList.add('active');
+                });
+            });
+
+
+            // --- LOCAL STORAGE FUNCTIONS ---
+            function loadData() {
+                inventory = JSON.parse(localStorage.getItem(INVENTORY_STORAGE_KEY)) || [];
+                crudHistory = JSON.parse(localStorage.getItem(CRUD_HISTORY_STORAGE_KEY)) || [];
+                stockInHistory = JSON.parse(localStorage.getItem(STOCK_IN_HISTORY_KEY)) || [];
+            }
+
+            function saveInventory() {
+                localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(inventory));
+            }
+            
+            function saveCrudHistory() {
+                localStorage.setItem(CRUD_HISTORY_STORAGE_KEY, JSON.stringify(crudHistory));
+            }
+
+            function saveStockInHistory() {
+                localStorage.setItem(STOCK_IN_HISTORY_KEY, JSON.stringify(stockInHistory));
+            }
+
+            function saveTransactions(transactions) {
+                 localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+            }
+            
+            function addCrudHistory(action, item) {
+                const now = new Date();
+                const historyEntry = {
+                    timestamp: now.toLocaleString('vi-VN'),
+                    action,
+                    item: item.name,
+                    details: ''
+                };
+                
+                if (action === 'add') {
+                    historyEntry.details = `Đã thêm: ${item.name}, giá ${formatCurrency(item.price)}đ`;
+                } else if (action === 'edit') {
+                    historyEntry.details = `Đã cập nhật: ${item.name}`;
+                } else if (action === 'delete') {
+                     historyEntry.details = `Đã xóa: ${item.name}`;
+                }
+
+                crudHistory.unshift(historyEntry);
+                if (crudHistory.length > 20) {
+                    crudHistory.pop();
+                }
+                saveCrudHistory();
+            }
+
+            // --- UTILITY FUNCTIONS ---
+            function generateUniqueId() {
+                return '_' + Math.random().toString(36).substring(2, 11);
+            }
+
+            function showMessage(msg, type = 'success') {
+                messageBox.textContent = msg;
+                messageBox.style.backgroundColor = type === 'error' ? '#f44336' : '#4caf50';
+                messageBox.classList.add('show');
+                setTimeout(() => {
+                    messageBox.classList.remove('show');
+                }, 3000);
+            }
+
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('vi-VN').format(amount);
+            }
+            
+            function createExpenseSlip(stockInHistoryId, productName, quantity, totalCost) {
+                let transactions = JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) || [];
+                const newExpenseSlip = {
+                    id: `PC-Kho-${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`,
+                    stockInId: stockInHistoryId, 
+                    type: 'expense',
+                    description: `Chi nhập kho: ${quantity} ${productName}`,
+                    amount: totalCost,
+                    date: new Date().toLocaleString('vi-VN'),
+                };
+                transactions.unshift(newExpenseSlip);
+                saveTransactions(transactions);
+            }
+
+            // --- RENDER FUNCTIONS ---
+            function renderAll() {
+                renderInventory();
+                renderCrudHistory();
+                renderStockInHistory();
+            }
+
+            function renderInventory() {
+                inventoryTableBody.innerHTML = '';
+                if (inventory.length === 0) {
+                    inventoryTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888;">Kho trống. Vui lòng thêm mặt hàng.</td></tr>`;
+                    return;
+                }
+                
+                const LOW_STOCK_THRESHOLD = 5; 
+
+                const tableHeader = document.querySelector('#items-tab .inventory-table thead tr');
+                let actionHeader = tableHeader.querySelector('.actions-header');
+
+                if (canEdit || canDelete) {
+                    if (!actionHeader) {
+                        actionHeader = document.createElement('th');
+                        actionHeader.textContent = 'Hành động';
+                        actionHeader.classList.add('actions-header');
+                        tableHeader.appendChild(actionHeader);
+                    }
+                } else {
+                    if (actionHeader) {
+                        actionHeader.remove();
+                    }
+                }
+
+                inventory.forEach(item => {
+                    const row = document.createElement('tr');
+                    const quantity = item.quantity || 0;
+
+                    if (quantity > 0 && quantity <= LOW_STOCK_THRESHOLD) {
+                        row.classList.add('low-stock');
+                    }
+                    
+                    let actionsHTML = '';
+                    if (canEdit || canDelete) {
+                        actionsHTML += '<td data-label="Hành động" class="actions">';
+                        if(canEdit) {
+                           actionsHTML += `<button class="edit-btn" data-id="${item.id}"><i class="fa-solid fa-pen-to-square"></i></button>`;
+                        }
+                        if(canDelete) {
+                           actionsHTML += `<button class="delete-btn" data-id="${item.id}"><i class="fa-solid fa-trash-can"></i></button>`;
+                        }
+                        actionsHTML += '</td>';
+                    }
+                    
+                    const quantityDisplay = quantity <= 0 
+                        ? `<span class="out-of-stock">Hết hàng</span>` 
+                        : quantity;
+
+                    row.innerHTML = `
+                        <td data-label="Hình ảnh"><img src="${item.image || 'https://placehold.co/50x50/cccccc/ffffff?text=No+Img'}" alt="${item.name}"></td>
+                        <td data-label="Tên mặt hàng">${item.name}</td>
+                        <td data-label="Giá bán">${formatCurrency(item.price)}đ</td>
+                        <td data-label="Tồn kho">${quantityDisplay}</td>
+                        ${actionsHTML}
+                    `;
+                    
+                    inventoryTableBody.appendChild(row);
+                });
+                
+                if (canEdit) {
+                    document.querySelectorAll('.edit-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => editItem(e.currentTarget.dataset.id));
+                    });
+                }
+                if (canDelete) {
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => deleteItem(e.currentTarget.dataset.id));
+                    });
+                }
+            }
+            
+            function renderCrudHistory() {
+                historyListBody.innerHTML = '';
+                if (crudHistory.length === 0) {
+                    historyListBody.innerHTML = `<li style="text-align: center; color: #888; font-size: 14px; padding: 15px;">Chưa có lịch sử thao tác.</li>`;
+                    return;
+                }
+                crudHistory.forEach(entry => {
+                    const li = document.createElement('li');
+                    li.classList.add('history-item');
+                    let iconClass = '', iconName = '';
+                    if (entry.action === 'add') { iconClass = 'add'; iconName = 'plus'; } 
+                    else if (entry.action === 'edit') { iconClass = 'edit'; iconName = 'pen-to-square'; } 
+                    else if (entry.action === 'delete') { iconClass = 'delete'; iconName = 'trash-can'; }
+                    li.innerHTML = `
+                        <div class="history-icon ${iconClass}">
+                            <i class="fa-solid fa-${iconName}"></i>
+                        </div>
+                        <div class="history-details">
+                            <p class="item-name">${entry.details}</p>
+                            <p class="timestamp"><i class="fa-solid fa-clock"></i> ${entry.timestamp}</p>
+                        </div>
+                    `;
+                    historyListBody.appendChild(li);
+                });
+            }
+
+            function renderStockInHistory() {
+                stockInHistoryTableBody.innerHTML = '';
+                if (stockInHistory.length === 0) {
+                     stockInHistoryTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888;">Chưa có lịch sử nhập kho.</td></tr>`;
+                    return;
+                }
+                
+                const sortedHistory = [...stockInHistory].sort((a, b) => new Date(b.rawTimestamp) - new Date(a.rawTimestamp));
+
+                sortedHistory.forEach(entry => {
+                    const row = document.createElement('tr');
+                    const totalCost = (entry.quantity || 0) * (entry.cost || 0);
+
+                    // --- BẮT ĐẦU: KIỂM SOÁT NÚT HÀNH ĐỘNG TRONG LỊCH SỬ ---
+                    let actionsHTML = '<td class="actions">';
+                    if (canEdit) {
+                        actionsHTML += `<button class="edit-btn stock-in-edit-btn" data-id="${entry.id}"><i class="fa-solid fa-pen-to-square"></i></button>`;
+                    }
+                    if (canDelete) {
+                        actionsHTML += `<button class="delete-btn stock-in-delete-btn" data-id="${entry.id}"><i class="fa-solid fa-trash-can"></i></button>`;
+                    }
+                    actionsHTML += '</td>';
+                    
+                    // Nếu không có quyền nào, cột hành động sẽ trống
+                    if (!canEdit && !canDelete) {
+                        actionsHTML = '<td></td>';
+                    }
+                    // --- KẾT THÚC: KIỂM SOÁT NÚT HÀNH ĐỘNG TRONG LỊCH SỬ ---
+
+                    row.innerHTML = `
+                        <td>${entry.timestamp}</td>
+                        <td>${entry.productName}</td>
+                        <td>${entry.quantity}</td>
+                        <td>${formatCurrency(entry.cost)}đ</td>
+                        <td>${formatCurrency(totalCost)}đ</td>
+                        ${actionsHTML}
+                        `;
+                    stockInHistoryTableBody.appendChild(row);
+                });
+                
+                if (canEdit) {
+                    document.querySelectorAll('.stock-in-edit-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => editStockInHistory(e.currentTarget.dataset.id));
+                    });
+                }
+                if (canDelete) {
+                    document.querySelectorAll('.stock-in-delete-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => deleteStockInHistory(e.currentTarget.dataset.id));
+                    });
+                }
+            }
+
+            // --- ACTION FUNCTIONS ---
+            itemForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = modalItemNameInput.value.trim();
+                const price = parseFloat(modalItemPriceInput.value);
+                const image = modalItemImageInput.value.trim() || 'https://placehold.co/100x100/1976d2/ffffff?text=Img';
+                
+                if (!name) { showMessage('Tên sản phẩm không được để trống.', 'error'); return; }
+                if (price < 0 || isNaN(price)) { showMessage('Giá bán phải là một số dương.', 'error'); return; }
+
+                const isDuplicate = inventory.some(item => item.name.toLowerCase() === name.toLowerCase() && item.id !== currentEditId);
+                if (isDuplicate) { showMessage('Tên sản phẩm này đã tồn tại trong kho.', 'error'); return; }
+
+                if (isEditing) {
+                    // Kiểm tra lại quyền trước khi thực hiện hành động
+                    if (!canEdit) { showMessage('Bạn không có quyền sửa sản phẩm.', 'error'); return; }
+                    const itemToUpdate = inventory.find(item => item.id === currentEditId);
+                    if (itemToUpdate) {
+                        itemToUpdate.name = name;
+                        itemToUpdate.price = price;
+                        itemToUpdate.image = image;
+                        addCrudHistory('edit', itemToUpdate);
+                        showMessage('Cập nhật mặt hàng thành công!');
+                    }
+                } else {
+                    // Kiểm tra lại quyền trước khi thực hiện hành động
+                    if (!canAdd) { showMessage('Bạn không có quyền thêm sản phẩm.', 'error'); return; }
+                    const newItem = { id: generateUniqueId(), name, price, quantity: 0, image };
+                    inventory.push(newItem);
+                    addCrudHistory('add', newItem);
+                    showMessage('Thêm mặt hàng mới thành công!');
+                }
+                
+                saveInventory();
+                renderAll();
+                itemModal.classList.remove('active');
+                itemForm.reset();
+            });
+
+            stockInForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const productId = stockInProductSelect.value;
+                const quantity = parseInt(stockInQuantityInput.value);
+                const cost = parseFloat(stockInCostInput.value);
+
+                if (!productId) { showMessage('Vui lòng chọn một sản phẩm.', 'error'); return; }
+                if (isNaN(quantity) || quantity <= 0) { showMessage('Số lượng nhập phải lớn hơn 0.', 'error'); return; }
+                if (isNaN(cost) || cost < 0) { showMessage('Giá vốn không hợp lệ.', 'error'); return; }
+                
+                const totalCost = quantity * cost;
+                
+                if (isEditingStockIn) {
+                    if (!canEdit) { showMessage('Bạn không có quyền sửa phiếu nhập kho.', 'error'); return; }
+                    const historyEntry = stockInHistory.find(h => h.id === currentEditStockInId);
+                    const product = inventory.find(i => i.id === historyEntry.productId);
+                    
+                    if(historyEntry && product) {
+                        product.quantity -= historyEntry.quantity;
+                        product.quantity += quantity;
+                        historyEntry.quantity = quantity;
+                        historyEntry.cost = cost;
+                        
+                        let transactions = JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) || [];
+                        const expenseSlip = transactions.find(t => t.stockInId === currentEditStockInId);
+                        if(expenseSlip) {
+                            expenseSlip.amount = totalCost;
+                            expenseSlip.description = `Chi nhập kho: ${quantity} ${product.name}`;
+                        }
+                        saveTransactions(transactions);
+                        showMessage('Cập nhật phiếu nhập kho thành công!');
+                    }
+                } else {
+                    if (!canAddKho) { showMessage('Bạn không có quyền thực hiện nhập kho.', 'error'); return; }
+                    const itemToStock = inventory.find(item => item.id === productId);
+                    if (itemToStock) {
+                        itemToStock.quantity = (itemToStock.quantity || 0) + quantity;
+                        const now = new Date();
+                        const newHistoryEntry = {
+                            id: generateUniqueId(),
+                            productId: itemToStock.id,
+                            productName: itemToStock.name,
+                            quantity: quantity,
+                            cost: cost,
+                            timestamp: now.toLocaleString('vi-VN'),
+                            rawTimestamp: now.toISOString()
+                        };
+                        stockInHistory.push(newHistoryEntry);
+                        createExpenseSlip(newHistoryEntry.id, itemToStock.name, quantity, totalCost);
+                        showMessage(`Đã nhập ${quantity} ${itemToStock.name} vào kho!`);
+                    } else {
+                         showMessage('Không tìm thấy sản phẩm để nhập kho.', 'error');
+                         return;
+                    }
+                }
+                
+                saveInventory();
+                saveStockInHistory();
+                renderAll();
+                
+                stockInModal.classList.remove('active');
+                stockInForm.reset();
+            });
+
+            function editItem(id) {
+                if (!canEdit) { showMessage('Bạn không có quyền thực hiện hành động này.', 'error'); return; }
+                const itemToEdit = inventory.find(item => item.id === id);
+                if (itemToEdit) {
+                    itemModalTitle.textContent = 'Cập nhật Sản Phẩm';
+                    modalItemNameInput.value = itemToEdit.name;
+                    modalItemPriceInput.value = itemToEdit.price;
+                    modalItemImageInput.value = itemToEdit.image;
+                    modalSaveBtn.textContent = 'Cập nhật';
+                    isEditing = true;
+                    currentEditId = id;
+                    itemModal.classList.add('active');
+                }
+            }
+
+            function deleteItem(id) {
+                if (!canDelete) { showMessage('Bạn không có quyền thực hiện hành động này.', 'error'); return; }
+                if (confirm('Bạn có chắc chắn muốn xóa mặt hàng này? Thao tác này không thể hoàn tác.')) {
+                    const deletedItemIndex = inventory.findIndex(item => item.id === id);
+                    if (deletedItemIndex > -1) {
+                        const deletedItem = inventory[deletedItemIndex];
+                        inventory.splice(deletedItemIndex, 1);
+                        addCrudHistory('delete', deletedItem);
+                        saveInventory();
+                        renderAll();
+                        showMessage('Xóa mặt hàng thành công!');
+                    }
+                }
+            }
+            
+            function editStockInHistory(id) {
+                if (!canEdit) { showMessage('Bạn không có quyền sửa phiếu nhập kho.', 'error'); return; }
+                const historyEntry = stockInHistory.find(h => h.id === id);
+                if (!historyEntry) return;
+                
+                isEditingStockIn = true;
+                currentEditStockInId = id;
+                
+                stockInModalTitle.textContent = "Cập nhật Phiếu Nhập Kho";
+                stockInSaveBtn.textContent = "Cập nhật";
+                
+                stockInProductSelect.innerHTML = `<option value="${historyEntry.productId}">${historyEntry.productName}</option>`;
+                stockInProductSelect.disabled = true; 
+                
+                stockInQuantityInput.value = historyEntry.quantity;
+                stockInCostInput.value = historyEntry.cost;
+                
+                stockInModal.classList.add('active');
+            }
+            
+            function deleteStockInHistory(id) {
+                if (!canDelete) { showMessage('Bạn không có quyền xóa phiếu nhập kho.', 'error'); return; }
+                if (!confirm('Bạn có chắc chắn muốn xóa lịch sử nhập kho này?\nHành động này sẽ:\n- Trừ số lượng đã nhập ra khỏi tồn kho.\n- Xóa phiếu chi tương ứng.')) {
+                    return;
+                }
+                
+                const historyIndex = stockInHistory.findIndex(h => h.id === id);
+                if (historyIndex === -1) return;
+                
+                const historyEntry = stockInHistory[historyIndex];
+                
+                const product = inventory.find(i => i.id === historyEntry.productId);
+                if (product) {
+                    product.quantity -= historyEntry.quantity;
+                    if (product.quantity < 0) product.quantity = 0; 
+                }
+                
+                let transactions = JSON.parse(localStorage.getItem(TRANSACTIONS_STORAGE_KEY)) || [];
+                transactions = transactions.filter(t => t.stockInId !== id);
+                saveTransactions(transactions);
+                
+                stockInHistory.splice(historyIndex, 1);
+                
+                saveInventory();
+                saveStockInHistory();
+                renderAll();
+                showMessage('Đã xóa phiếu nhập kho và cập nhật lại dữ liệu thành công.');
+            }
+
+            // --- MODAL EVENT LISTENERS ---
+            addItemBtn.addEventListener('click', () => {
+                itemModalTitle.textContent = 'Thêm Sản Phẩm Mới';
+                modalSaveBtn.textContent = 'Lưu';
+                isEditing = false;
+                currentEditId = null;
+                itemForm.reset();
+                itemModal.classList.add('active');
+            });
+
+            if (stockInBtn) {
+                stockInBtn.addEventListener('click', () => {
+                    isEditingStockIn = false;
+                    currentEditStockInId = null;
+                    stockInModalTitle.textContent = "Phiếu Nhập Kho";
+                    stockInSaveBtn.textContent = "Xác nhận Nhập Kho";
+                    stockInProductSelect.disabled = false;
+                    
+                    stockInProductSelect.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+                    if (inventory.length === 0) {
+                         showMessage('Chưa có sản phẩm nào để nhập kho. Vui lòng thêm sản phẩm trước.', 'error');
+                         return;
+                    }
+                    inventory.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.name;
+                        stockInProductSelect.appendChild(option);
+                    });
+                    stockInForm.reset();
+                    stockInModal.classList.add('active');
+                });
+            }
+
+
+            document.querySelectorAll('.close-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.target.closest('.modal').classList.remove('active');
+                });
+            });
+
+            window.addEventListener('click', (e) => { 
+                if (e.target.classList.contains('modal')) {
+                    e.target.classList.remove('active');
+                }
+            });
+
+            // START SYNC: Update click event for sidebar toggle
+            toggleHistoryBtn.addEventListener('click', () => mainContent.classList.toggle('sidebar-active'));
+            // END SYNC
+
+            // --- INITIALIZATION ---
+            loadData();
+            renderAll();
+        });
+
+      // === LOGIC CẬP NHẬT TÊN QUÁN VÀ HOTLINE TỪ CÀI ĐẶT ===
+        function updateStoreInfo() {
+            const savedData = localStorage.getItem('general-form');
+            if (savedData) {
+                const settings = JSON.parse(savedData);
+
+                // Cập nhật tên quán trên header
+                const storeNameElement = document.querySelector('.main-header .app-name');
+                if (storeNameElement && settings['store-name']) {
+                    storeNameElement.innerHTML = `<i class="fa-solid fa-gem"></i> ${settings['store-name']}`;
+                }
+
+                // Cập nhật số điện thoại trên footer
+                const phoneElement = document.querySelector('.main-footer .phone-info');
+                if (phoneElement && settings.phone) {
+                    phoneElement.innerHTML = `<i class="fa-solid fa-phone"></i> Hotline: ${settings.phone}`;
+                }
+
+                // Cập nhật thông tin bản quyền trên footer
+                const copyrightElement = document.querySelector('.main-footer .copyright-info');
+                if (copyrightElement && settings['store-name']) {
+                    copyrightElement.innerHTML = `<i class="fa-solid fa-copyright"></i> 2025 ${settings['store-name']}. All rights reserved.`;
+                }
+            }
+        }
+        updateStoreInfo();
+
+        // --- LOGOUT LOGIC ---
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                sessionStorage.clear();
+                window.location.href = 'login.html';
+            });
+        }
+    </script>
+</body>
+</html>

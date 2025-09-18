@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHẦN MỀM QUẢN LÝ QUÁN BI-A</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    
+    <style>
+        /* ===================== COMMITMENTS SECTION ===================== */
+.commitments-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.commitment-card {
+    background-color: var(--card-background);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: var(--shadow-light);
+    border: 1px solid #eef2f6;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.commitment-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-dark);
+}
+
+.commitment-card i {
+    font-size: 38px;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.commitment-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.commitment-card p {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+}
+
+        /* ===================== ADVERTISEMENT MARQUEE (ĐÃ SỬA) ===================== */
+.ad-marquee-container {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: var(--light-text-color);
+    padding: 15px 0;
+    border-radius: 12px;
+    box-shadow: var(--shadow-light);
+    overflow: hidden;
+    margin-top: 30px;
+    white-space: nowrap;
+}
+
+.ad-marquee-content {
+    display: inline-block;
+    /* TỐC ĐỘ ĐÃ ĐƯỢC LÀM CHẬM LẠI TỪ 25s LÊN 40s */
+    animation: marquee-scroll 45s linear infinite;
+    padding-left: 100%;
+}
+
+.ad-marquee-content span {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 40px;
+}
+
+@keyframes marquee-scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* Khối mã :hover đã được xóa để không dừng lại khi rê chuột */
+        /* ===================== FONT AND COLOR VARIABLES ===================== */
+        :root {
+            --primary-color: #0d47a1;
+            --secondary-color: #1976d2;
+            --text-color: #333;
+            --light-text-color: #f0f4f8;
+            --background-color: #eef2f6;
+            --card-background: #ffffff;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-dark: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ===================== GLOBAL STYLES ===================== */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Logo ở header */
+        .app-logo-header {
+            height: 40px;
+            width: auto;
+            vertical-align: middle;
+            margin-right: 8px; /* Giảm khoảng cách giữa logo và chữ ở header */
+        }
+        
+        /* Logo ở giữa trang chủ */
+        .centered-logo {
+            max-width: 300px; /* Giới hạn chiều rộng của logo */
+            height: auto;
+            margin-top: 20px; /* Giảm khoảng cách với dòng chữ ở trên */
+        }
+
+        /* ===================== HEADER ===================== */
+        .main-header {
+            background-color: var(--card-background);
+            box-shadow: var(--shadow-light);
+            height: 70px;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .main-header .app-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-header .app-name i {
+            color: var(--secondary-color);
+        }
+
+        .main-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-nav li {
+            position: relative;
+            margin: 0 5px;
+        }
+
+        .main-nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .main-nav a i {
+            font-size: 18px;
+            color: var(--secondary-color);
+        }
+
+        .main-nav a:hover,
+        .main-nav li.active a {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .main-nav li.active a i {
+            color: var(--primary-color);
+        }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: var(--shadow-dark);
+            min-width: 220px;
+            z-index: 99;
+            list-style: none;
+            padding: 10px 0;
+            margin-top: 10px;
+            transform: translateY(10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .has-dropdown:hover .dropdown-menu {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dropdown-menu a {
+            padding: 12px 20px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-color);
+            border-radius: 0;
+            font-size: 14px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .dropdown-menu a i {
+            font-size: 16px;
+            color: var(--secondary-color);
+        }
+
+        /* ===================== MAIN CONTENT ===================== */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .content-panel {
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            /* Thuộc tính này sẽ căn giữa mọi thứ bên trong */
+            text-align: center;
+        }
+
+        .content-panel h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .content-panel p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        /* ===================== FOOTER ===================== */
+        .main-footer {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 20px 30px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer-info, .user-info {
+            display: flex;
+            gap: 25px;
+        }
+
+        .main-footer i {
+            color: var(--light-text-color);
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="main-header">
+            <a href="index.html" style="text-decoration: none;">
+                <h1 class="app-name">
+                    <img src="images/logo-bida-Photoroom.png" alt="Logo BI-A OXU" class="app-logo-header"> BI-A OXU
+                </h1>
+            </a>
+            <nav class="main-nav">
+                <ul>
+                    <li class="active"><a href="index.html"><i class="fa-solid fa-chart-line"></i> Trang chủ</a></li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-boxes-stacked"></i> Quản lý</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="quanly_ban.html"><i class="fa-solid fa-table-tennis-paddle-ball"></i> Quản lý bàn</a></li>
+                            <li><a href="quanly_khachhang.html"><i class="fa-solid fa-address-book"></i> Quản lý Khách hàng</a></li>
+                            <li><a href="quanly_datban.html"><i class="fa-solid fa-calendar-check"></i> Quản lý Đặt bàn</a></li>
+                            <li><a href="quanly_thuchi.html"><i class="fa-solid fa-cash-register"></i> Quản lý thu chi</a></li>
+                            <li><a href="quanly_kho.html"><i class="fa-solid fa-box-open"></i> Quản lý kho</a></li>
+                            <li><a href="quanly_nhanvien.html"><i class="fa-solid fa-users"></i> Quản lý nhân viên</a></li>
+                        </ul>
+                    </li>
+                    <li class="has-dropdown">
+                        <a href="#"><i class="fa-solid fa-chart-pie"></i> Báo cáo</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="baocao_doanhthu.html"><i class="fa-solid fa-file-invoice"></i> Doanh thu ngày</a></li>
+                            <li><a href="baocao_thongke.html"><i class="fa-solid fa-chart-bar"></i> Thống kê tuần</a></li>
+                            <li><a href="baocao_loinhuan.html"><i class="fa-solid fa-file-contract"></i> Báo cáo nhân viên</a></li>
+                            <li><a href="baocao_khachhang.html"><i class="fa-solid fa-user-tag"></i> Phân tích Khách hàng</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="cai_dat.html"><i class="fa-solid fa-gear"></i> Cài đặt</a></li>
+                    <li><a href="tro_giup.html"><i class="fa-solid fa-circle-question"></i> Trợ giúp</a></li>
+                    <li><a href="#" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="content-wrapper">
+            <main class="main-content">
+                <div class="content-panel">
+                    <h2>Chào mừng đến với hệ thống quản lý BI-A</h2>
+                    <p>Vui lòng chọn một chức năng từ thanh menu phía trên để bắt đầu công việc.</p>
+                    <img src="images/logo-bida-Photoroom.png" alt="Logo BI-A OXU" class="centered-logo">
+                </div>
+
+                 <div class="commitments-container">
+                    <div class="commitment-card">
+                        <i class="fa-solid fa-rocket"></i>
+                        <h3>TRIỂN KHAI NHANH CHÓNG</h3>
+                        <p>Cam kết cài đặt, hướng dẫn và đưa hệ thống vào vận hành một cách trọn vẹn.</p>
+                    </div>
+                    <div class="commitment-card">
+                        <i class="fa-solid fa-headset"></i>
+                        <h3>HỖ TRỢ TẬN TÌNH 24/7</h3>
+                        <p>Luôn sẵn sàng giải đáp thắc mắc và xử lý sự cố kỹ thuật của bạn tức thì.</p>
+                    </div>
+                    <div class="commitment-card">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <h3>CẬP NHẬT DÀI LÂU</h3>
+                        <p>Phần mềm được nâng cấp và cải tiến liên tục để phù hợp với nhu cầu kinh doanh.</p>
+                    </div>
+                </div>
+
+                <div class="ad-marquee-container">
+        <div class="ad-marquee-content">
+            <span>🎉 Khuyến mãi đặc biệt: Giảm 20% giờ chơi cho học sinh, sinh viên!</span>
+            <span>🎱 Bàn mới, vải nỉ cao cấp - Trải nghiệm mượt mà!</span>
+            <span>🍻 Combo đồ ăn nhẹ và nước uống chỉ từ 99k!</span>
+            <span>🏆 Tổ chức giải đấu hàng tháng - Đăng ký ngay!</span>
+            <span>🎉 Khuyến mãi đặc biệt: Giảm 20% giờ chơi cho học sinh, sinh viên!</span> </div>
+    </div>
+            </main>
+        </div>
+
+        <footer class="main-footer">
+            <div class="footer-info">
+                <span class="copyright-info"><i class="fa-solid fa-copyright"></i> 2025 BI-A OXU. All rights reserved.</span>
+                <span class="phone-info"><i class="fa-solid fa-phone"></i> Hotline: </span>
+            </div>
+            <div class="user-info">
+                <span id="footer-username"><i class="fa-solid fa-user"></i> Người dùng: </span>
+                <span><i class="fa-solid fa-circle-check"></i> Trạng thái: OK</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loggedInUser = sessionStorage.getItem('loggedInUser');
+
+            if (loggedInUser) {
+                const usernameElement = document.getElementById('footer-username');
+                if (usernameElement) {
+                    usernameElement.innerHTML = `<i class="fa-solid fa-user"></i> Người dùng: ${loggedInUser}`;
+                }
+            }
+            console.log('Trang chủ đã được tải.');
+
+            function updateStoreInfo() {
+                const savedData = localStorage.getItem('general-form');
+                if (savedData) {
+                    const settings = JSON.parse(savedData);
+
+                    const storeNameElement = document.querySelector('.main-header .app-name');
+                    if (storeNameElement && settings['store-name']) {
+                        storeNameElement.innerHTML = `<img src="images/logo-bida-Photoroom.png" alt="Logo BI-A OXU" class="app-logo-header"> ${settings['store-name']}`;
+                    }
+
+                    const phoneElement = document.querySelector('.main-footer .phone-info');
+                    if (phoneElement && settings.phone) {
+                        phoneElement.innerHTML = `<i class="fa-solid fa-phone"></i> Hotline: ${settings.phone}`;
+                    }
+
+                    const copyrightElement = document.querySelector('.main-footer .copyright-info');
+                    if (copyrightElement && settings['store-name']) {
+                        copyrightElement.innerHTML = `<i class="fa-solid fa-copyright"></i> 2025 ${settings['store-name']}. All rights reserved.`;
+                    }
+                }
+            }
+            updateStoreInfo();
+
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    sessionStorage.removeItem('isLoggedIn');
+                    window.location.href = 'login.html';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

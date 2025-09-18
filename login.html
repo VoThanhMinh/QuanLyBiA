@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - BI-A OXU</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0d47a1;
+            --secondary-color: #1976d2;
+            --text-color: #333;
+            --background-color: #eef2f6;
+            --card-background: #ffffff;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --danger-color: #f44336;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-container h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .logo {
+            color: var(--primary-color);
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-login:hover {
+            background-color: var(--secondary-color);
+        }
+        #error-message {
+            color: var(--danger-color);
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+        .register-link {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .register-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <i class="fa-solid fa-gem logo"></i>
+        <h2>Đăng nhập</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Tên đăng nhập</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn-login">Đăng nhập</button>
+            <div id="error-message"></div>
+        </form>
+        <div class="register-link">
+            Chưa có tài khoản? <a href="register.html">Đăng ký tại đây</a>
+        </div>
+    </div>
+
+    <script>
+        // Chuyển đến trang chủ nếu đã đăng nhập
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+            
+            const ACCOUNTS_STORAGE_KEY = 'biaOxuAccounts';
+            const accounts = JSON.parse(localStorage.getItem(ACCOUNTS_STORAGE_KEY)) || [];
+
+            // Nếu chưa có tài khoản nào, thông báo và hướng dẫn đăng ký
+            if (accounts.length === 0) {
+                errorMessage.textContent = 'Chưa có tài khoản nào. Vui lòng đăng ký.';
+                return;
+            }
+
+            const foundUser = accounts.find(acc => acc.username === username);
+
+            // Băm mật khẩu nhập vào để so sánh
+            const hashedPassword = btoa(password);
+
+            if (foundUser && foundUser.password === hashedPassword) {
+                // Đăng nhập thành công
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userRole', foundUser.role); // Lưu vai trò vào sessionStorage
+                sessionStorage.setItem('loggedInUser', foundUser.username); // Lưu tên người dùng
+                window.location.href = 'index.html';
+            } else {
+                // Đăng nhập thất bại
+                errorMessage.textContent = 'Tên đăng nhập hoặc mật khẩu không đúng!';
+            }
+        });
+    </script>
+</body>
+</html>
